@@ -594,7 +594,8 @@ const nextDow=(dow,w=0)=>{const d=new Date();d.setDate(d.getDate()+((dow-d.getDa
 function seed(){const d=defaults();
  return d}
 const norm=j=>{const d=defaults();const o={...d,...j,settings:{...d.settings,...(j.settings||{})}};
- const st=o.settings;if(!j.settings||!Array.isArray(j.settings.signers)){const nm0=j.settings&&j.settings.signer;st.signers=nm0?[{id:"s1",name:nm0,role:"",mode:j.settings.sign?"img":"type",img:j.settings.sign||""}]:[];st.defSigner=nm0?"s1":""}["cats","packages","invoices","income","events"].forEach(k=>{if(!Array.isArray(o[k]))o[k]=d[k]});o.invoices.forEach(i=>{i.lines=i.lines||[];i.notes=i.notes||[]});return o};
+ const st=o.settings;if(!j.settings||!Array.isArray(j.settings.signers)){const nm0=j.settings&&j.settings.signer;st.signers=nm0?[{id:"s1",name:nm0,role:"",mode:j.settings.sign?"img":"type",img:j.settings.sign||""}]:[];st.defSigner=nm0?"s1":""}st.signers=(st.signers||[]).filter(g=>!(g.mode==="type"&&/^rica januarita$/i.test(String(g.name||"").trim())));if(!st.signers.some(g=>g.id===st.defSigner))st.defSigner=(st.signers[0]||{}).id||"";
+ ["cats","packages","invoices","income","events"].forEach(k=>{if(!Array.isArray(o[k]))o[k]=d[k]});o.invoices.forEach(i=>{i.lines=i.lines||[];i.notes=i.notes||[]});return o};
 let db=seed();
 const S=()=>db.settings;
 
@@ -805,7 +806,7 @@ let cv="month",cd=TD,agN=60,wkScroll=true;
 const money=n=>`<span class="bv${hide?" on":""}">${rp(n)}</span>`,moneyk=n=>`<span class="bv${hide?" on":""}">${rpk(n)}</span>`;
 
 /* ================= navigasi ================= */
-function go(v){if(v==="inc"&&view!=="inc")incHide=true;if(v===view){closeS();render();return}if(view!=="new")hist.push(view);if(v!=="new"){ed=null;edId=null}else if(!ed)newEd();view=v;wkScroll=true;closeS();render(true)}
+function go(v){if(v==="inc"&&view!=="inc")incHide=true;if(v===view){closeS();render();return}if(view!=="new")hist.push(view);if(v!=="new"){ed=null;edId=null}else if(!ed)newEd();view=v;wkScroll=true;closeS();render(true);navTop()}
 function back(){const v=hist.pop()||"home";ed=null;edId=null;view=v;render(true)}
 function render(top){
  const V={home:vHome,inv:vInv,new:vNew,inc:vInc,cal:vCal,set:vSet}[view]||vHome;
@@ -814,7 +815,7 @@ function render(top){
  if(top)window.scrollTo(0,0);
  if(view==="new")edSum();
  if(view==="cal"&&cv==="week")weekScroll();
- uiSave();guard()}
+ uiSave()}
 function navHtml(){const b=(k,i,t,x="")=>`<button class="nb ${x} ${view===k?"on":""}" data-go="${k}">${ico(i,22)}<span>${t}</span></button>`;
  return`<div class="bnin"><div class="nbrand"><img class="bw" src="${LG_FULLW}" alt="Einmorf Entertainment"><img class="bm" src="${LG_MARKW}" alt="Einmorf"></div>${b("home","home","Beranda")}${b("inv","inv","Invoice")}<span class="nsp"></span>${b("cal","cal","Kalender")}${b("inc","inc","Pendapatan")}${b("set","gear","Pengaturan","nset")}<button class="fab" data-act="newinv" aria-label="Invoice baru">${LOGO(34)}<span class="fl">Invoice baru</span></button></div>`}
 const topBar=(right="")=>`<div class="top"><button class="pb" data-act="back" aria-label="Kembali">${ico("chL",20)}</button><div class="flx">${right}</div></div>`;
@@ -887,8 +888,8 @@ const TH={classic:["#fff",[[8,7,32,5,"#222"],[8,16,84,1,"#222"],[8,30,84,4,"#ddd
 const tplOf=o=>TPL[o.tpl]?o.tpl:(TPL[S().tpl]?S().tpl:"classic");
 function tpPick(sel,act){return`<div class="tps">${Object.keys(TPL).map(k=>`<button class="tp ${sel===k?"on":""}" data-act="${act}" data-k="${k}"><span class="th" style="background:${TH[k][0]}">${TH[k][1].map(([l,t,w,h,bg,x=""])=>`<i style="left:${l}%;top:${t}%;width:${w}%;height:${h}%;background:${bg};${x}"></i>`).join("")}</span>${TPL[k].n}</button>`).join("")}</div>`}
 const signers=()=>S().signers||[];
-const signerOf=o=>signers().find(x=>x.id===o.signerId)||signers().find(x=>x.id===S().defSigner)||signers()[0]||{name:S().company,mode:"type"};
-const sigHtml=g=>g.mode==="img"&&g.img?`<img src="${g.img}" alt="Tanda tangan ${esc(g.name)}">`:`<span class="sigt">${esc(g.name)}</span>`;
+const signerOf=o=>signers().find(x=>x.id===o.signerId)||signers().find(x=>x.id===S().defSigner)||signers()[0]||{name:"",mode:"none"};
+const sigHtml=g=>g.mode==="none"?"":g.mode==="img"&&g.img?`<img src="${g.img}" alt="Tanda tangan ${esc(g.name)}">`:`<span class="sigt">${esc(g.name)}</span>`;
 const VP1="M38,122 Q38,98 62,98 L316,98 Q330,98 338,108 L388,158 Q398,168 412,168 L732,168 Q756,168 756,192 L756,1059 Q756,1083 732,1083 L62,1083 Q38,1083 38,1059 Z",VP2="M38,84 Q38,60 62,60 L732,60 Q756,60 756,84 L756,1059 Q756,1083 732,1083 L62,1083 Q38,1083 38,1059 Z";
 function decor(t,pi,s){if(t==="villa")return`<svg class="vbg" viewBox="0 0 794 1123" preserveAspectRatio="none"><rect width="794" height="${pi?200:270}" fill="#1d1416"/><path d="${pi?VP2:VP1}" fill="#efe7da"/></svg>${pi?"":`<div class="vbr"><img src="${s.logo||LG_FULLW}" alt="" style="${s.logo?"background:#efe7da;border-radius:8px;padding:4px":""}"><small>${esc(s.company)}</small></div>`}`;
  if(t==="modern")return`<i class="m-strip"></i><i class="m-blob"></i>`;if(t==="dark")return`<i class="d-b1"></i><i class="d-b2"></i>`;return""}
@@ -900,9 +901,9 @@ function pBlocks(o){const s=S(),t=tplOf(o),T=TPL[t],c=calc(o),B=[],lg=s.logo||LG
   :t==="studio"?`<div class="s-top"><img src="${lg}" alt=""><div class="p-co">${co}</div></div><div class="s-big"><span>INVOICE<i>.</i></span><small>No. ${esc(o.no)}<br>${dateEN(o.dIn)}</small></div>`
   :t==="mono"?`<div class="p-hd"><div class="p-lg"><img src="${lg}" alt=""></div><div class="p-co">${co}</div></div><div class="mo-ttl">INVOICE</div>`
   :`<div class="p-hd"><div class="p-lg"><img src="${lg}" alt=""></div><div class="p-co">${co}</div></div><div class="p-ttl"><span>INVOICE</span></div>`});
- B.push({k:"meta",h:t==="villa"?`<div class="v-meta"><div><h4>NOTA PEMBAYARAN</h4>Nota Nomor ${esc(o.no)}<br>Tanggal ${fdl(o.dIn)}<br>Sales: ${esc(o.sales||s.sales)}</div><div><h4>NAMA PEMESAN</h4>${esc(o.client)||"-"}${o.evName?"<br>"+esc(o.evName):""}</div></div>`
-  :t==="classic"?`<div class="p-meta"><div class="p-bill"><span>Bill To</span><span>:</span><b>${esc(o.client)||"-"}</b></div><div class="p-kv"><span>Sales</span><span>:</span><span>${esc(o.sales||s.sales)}</span><span>No. Invoice</span><span>:</span><span>${esc(o.no)}</span><span>Date</span><span>:</span><span>${dateEN(o.dIn)}</span></div></div>`
-  :`<div class="g-meta"><div><small>BILL TO</small><b>${esc(o.client)||"-"}</b>${o.evName?esc(o.evName):""}</div><div class="g-kv"><span>No. Invoice</span><b style="font-size:1em">${esc(o.no)}</b><span>Date</span><span style="opacity:1">${dateEN(o.dIn)}</span><span>Sales</span><span style="opacity:1">${esc(o.sales||s.sales)}</span></div></div>`});
+ B.push({k:"meta",h:t==="villa"?`<div class="v-meta"><div><h4>NOTA PEMBAYARAN</h4>Nota Nomor ${esc(o.no)}<br>Tanggal ${fdl(o.dIn)}<br>Sales: ${esc(o.sales||s.sales)}</div><div><h4>BILL TO</h4>${esc(o.client)||"-"}${o.evName?`<br>Acara: <b>${esc(o.evName)}</b>`:""}</div></div>`
+  :t==="classic"?`<div class="p-meta"><div class="p-bill"><span>Bill To</span><span>:</span><b>${esc(o.client)||"-"}</b>${o.evName?`<span>Event</span><span>:</span><b>${esc(o.evName)}</b>`:""}</div><div class="p-kv"><span>Sales</span><span>:</span><span>${esc(o.sales||s.sales)}</span><span>No. Invoice</span><span>:</span><span>${esc(o.no)}</span><span>Date</span><span>:</span><span>${dateEN(o.dIn)}</span></div></div>`
+  :`<div class="g-meta"><div><small>BILL TO</small><b>${esc(o.client)||"-"}</b>${o.evName?`<small style="margin-top:10px">EVENT</small><b>${esc(o.evName)}</b>`:""}</div><div class="g-kv"><span>No. Invoice</span><b style="font-size:1em">${esc(o.no)}</b><span>Date</span><span style="opacity:1">${dateEN(o.dIn)}</span><span>Sales</span><span style="opacity:1">${esc(o.sales||s.sales)}</span></div></div>`});
  const desc=o.title||(o.evName?"Paket entertainment untuk acara "+o.evName:""),ev=evLine(o);
  if(desc||ev)B.push({k:"desc",h:`<div class="p-desc">${desc?esc(desc)+"<br>":""}${ev?`<b>${esc(ev)}</b>`:""}</div>`});
  B.push({k:"th",h:`<div class="p-tr p-th"><span>No</span><span>TALENT</span><span>JUMLAH</span><span>TOTAL FEE</span></div>`});
@@ -957,7 +958,7 @@ function vNew(){const f=(l,k,t="text",ph="")=>t==="money"?`<label>${l}</label><i
   <div class="sumbox"><div><span class="mu">Deal</span><b id="sDeal">Rp 0</b></div><div><span class="mu">Gross up</span><b id="sGu">Rp 0</b></div><div class="big"><span>Total di invoice</span><span id="sTot">Rp 0</span></div></div>
   ${f("Jatuh tempo pelunasan","dDue","date")}</div>
  <div class="fc"><h2>Template invoice</h2><p class="hint">Pilih tampilan kertas. Bisa diganti kapan saja, isinya tetap.</p>${tpPick(ed.tpl||S().tpl||"classic","etpl")}</div>
- <div class="fc"><h2>Tanda tangan</h2><p class="hint">Pilih atas nama siapa invoice ini ditandatangani.</p>${sgList(signerOf(ed).id,"esg")}<button class="btn ghost" data-act="sgnew" data-ctx="ed">${ico("plus",16)} Orang lain</button></div>
+ <div class="fc"><h2>Tanda tangan <span class="mu sm" style="font-weight:600">(wajib)</span></h2>${signers().length?`<p class="hint">Pilih atas nama siapa invoice ini ditandatangani.</p>${sgList(signerOf(ed).id,"esg")}<div class="flx" style="flex-wrap:wrap;gap:8px;margin-top:8px"><button class="btn sm" data-act="sgedit" data-id="${signerOf(ed).id}">${ico("edit",15)} Edit tanda tangan ini</button><button class="btn sm ghost" data-act="sgnew" data-ctx="ed">${ico("plus",15)} Orang lain</button></div>`:`<p class="hint">Belum ada tanda tangan. Buat dulu sebelum menyimpan invoice.</p><button class="btn pr wide" data-act="sgnew" data-ctx="ed">${ico("plus",16)} Buat tanda tangan</button>`}</div>
  <div class="fc"><h2>Catatan (NOTED)</h2><p class="hint">Setiap poin jadi nomor di invoice.</p><div id="nts">${notesHtml()}</div>
   <button class="btn ghost" data-act="ntadd">${ico("plus",16)} Tambah poin</button>
   <div class="r2" style="margin-top:8px"><button class="btn sm" data-act="ntcat">Ambil dari talent</button><button class="btn sm" data-act="ntstd">Pakai standar</button></div></div>
@@ -1136,23 +1137,24 @@ async function shareData(){const txt=JSON.stringify(db),nm0="einmorf-data-"+TD,m
 /* ================= penanda tangan ================= */
 function sgList(sel,act){return`<div class="sgl">${signers().map(g=>`<button class="sgr ${sel===g.id?"on":""}" data-act="${act}" data-id="${g.id}"><span class="pv">${sigHtml(g)}</span><span style="min-width:0"><b>${esc(g.name)}</b><small>${esc(g.role||(g.mode==="img"?"Tanda tangan gambar":"Tanda tangan ketik"))}</small></span>${S().defSigner===g.id?`<span class="ok">Default</span>`:""}</button>`).join("")}</div>`}
 let SG=null,SGctx="set";
-function sgEdit(id,ctx){SGctx=ctx||"set";const g=id?signers().find(x=>x.id===id):null;SG=g?{...g,mode:g.mode==="img"?"up":"type",tmp:g.img}:{id:"",name:"",role:"",mode:"draw",img:"",tmp:""};sgDraw()}
+function sgEdit(id,ctx){SGctx=ctx||"set";const g=id?signers().find(x=>x.id===id):null;SG=g?{...g,mode:g.src||(g.mode==="img"?"up":"type"),tmp:g.img}:{id:"",name:"",role:"",mode:"draw",img:"",tmp:""};sgDraw()}
 function sgDraw(){const g=SG;
  openS(`<div class="grab"></div><h2 style="font-size:20px">${g.id?"Penanda tangan":"Penanda tangan baru"}</h2>
  <label>Nama lengkap</label><input id="sg_n" value="${esc(g.name)}" placeholder="Nama lengkap"><label>Jabatan (opsional)</label><input id="sg_r" value="${esc(g.role)}" placeholder="mis. Manager">
  <label>Cara tanda tangan</label><div class="segm"><button class="${g.mode==="type"?"on":""}" data-act="sgm" data-k="type">Ketik</button><button class="${g.mode==="draw"?"on":""}" data-act="sgm" data-k="draw">Gambar</button><button class="${g.mode==="up"?"on":""}" data-act="sgm" data-k="up">Unggah</button></div>
  ${g.mode==="type"?`<div class="sigbox"><span class="sigt" id="sg_prev">${esc(g.name||"Nama kamu")}</span></div><p class="hint" style="margin-top:6px">Nama ditulis dengan huruf tulisan tangan.</p>`
-  :g.mode==="draw"?`<canvas class="pad" id="pad"></canvas><div class="between" style="margin-top:6px"><span class="hint">Tanda tangan dengan jari di kotak putih.</span><button class="btn sm" data-act="padclr">Ulangi</button></div>`
+  :g.mode==="draw"?`<canvas class="pad" id="pad"></canvas><div class="between" style="margin-top:6px"><span class="hint">Tanda tangan dengan jari atau stylus. Boleh diangkat lalu lanjut menulis.</span><button class="btn sm" data-act="padclr">Ulangi tanda tangan</button></div>`
   :`<div class="sigbox">${g.tmp?`<img src="${g.tmp}" alt="">`:`<span class="mu sm">Belum ada gambar</span>`}</div><button class="btn sm" style="margin-top:8px" data-act="sgup">${ico("ul",15)} Pilih foto tanda tangan</button><p class="hint" style="margin-top:6px">Latar putih otomatis dibuat transparan.</p>`}
  <div class="sp"></div><button class="btn pr wide" data-act="sgsave">Simpan</button>
- ${g.id&&S().defSigner!==g.id?`<button class="btn wide" style="margin-top:8px" data-act="sgdef">Jadikan default</button>`:""}${g.id&&signers().length>1?`<button class="btn del wide" style="margin-top:8px" data-act="sgdel">${ico("trash",16)} Hapus penanda tangan</button>`:""}`);
+ ${g.id&&S().defSigner!==g.id?`<button class="btn wide" style="margin-top:8px" data-act="sgdef">Jadikan default</button>`:""}${g.id?`<button class="btn del wide" style="margin-top:8px" data-act="sgdel">${ico("trash",16)} Hapus penanda tangan</button>`:""}`);
  if(g.mode==="draw")padInit()}
 function padInit(){const c=$("#pad");if(!c)return;const r=c.getBoundingClientRect(),dpr=window.devicePixelRatio||1;c.width=r.width*dpr;c.height=r.height*dpr;const x=c.getContext("2d");x.scale(dpr,dpr);x.lineCap="round";x.lineJoin="round";x.strokeStyle="#1b1b3a";x.lineWidth=2.6;
  if(SG.tmp&&SG.mode==="draw"){const im=new Image();im.onload=()=>{const k=Math.min(r.width/im.width,r.height/im.height,1);x.drawImage(im,(r.width-im.width*k)/2,(r.height-im.height*k)/2,im.width*k,im.height*k)};im.src=SG.tmp}
- let on=false,lx=0,ly=0;const pt=e=>{const b=c.getBoundingClientRect();return[e.clientX-b.left,e.clientY-b.top]};
- c.onpointerdown=e=>{on=true;c.setPointerCapture(e.pointerId);[lx,ly]=pt(e);x.beginPath();x.arc(lx,ly,1.2,0,7);x.fillStyle="#1b1b3a";x.fill();e.preventDefault()};
- c.onpointermove=e=>{if(!on)return;const[nx,ny]=pt(e);x.beginPath();x.moveTo(lx,ly);x.quadraticCurveTo(lx,ly,(lx+nx)/2,(ly+ny)/2);x.lineTo(nx,ny);x.stroke();lx=nx;ly=ny;e.preventDefault()};
- c.onpointerup=c.onpointercancel=()=>{if(!on)return;on=false;SG.tmp=trimCanvas(c);SG.drawn=true}}
+ let pid=null,lx=0,ly=0,tm=null;const pt=e=>{const b=c.getBoundingClientRect();return[e.clientX-b.left,e.clientY-b.top]};
+ c.onpointerdown=e=>{e.preventDefault();if(pid!==null&&e.pointerType!=="pen")return;pid=e.pointerId;try{c.setPointerCapture(e.pointerId)}catch(x2){}[lx,ly]=pt(e);x.beginPath();x.arc(lx,ly,1.3,0,7);x.fillStyle="#1b1b3a";x.fill();clearTimeout(tm)};
+ c.onpointermove=e=>{if(e.pointerId!==pid)return;e.preventDefault();const L=e.getCoalescedEvents?e.getCoalescedEvents():[e];for(const q of (L.length?L:[e])){const[nx,ny]=pt(q);x.beginPath();x.moveTo(lx,ly);x.quadraticCurveTo(lx,ly,(lx+nx)/2,(ly+ny)/2);x.lineTo(nx,ny);x.stroke();lx=nx;ly=ny}};
+ c.onpointerup=c.onpointercancel=e=>{if(e.pointerId!==pid)return;pid=null;SG.drawn=true;clearTimeout(tm);tm=setTimeout(()=>{SG.tmp=trimCanvas(c)},250)};
+ c.ontouchstart=c.ontouchmove=ev=>ev.preventDefault()}
 function trimCanvas(c){const x=c.getContext("2d"),{width:w,height:h}=c,d=x.getImageData(0,0,w,h).data;let a=w,b=h,e=0,f=0;
  for(let y=0;y<h;y++)for(let i=0;i<w;i++)if(d[(y*w+i)*4+3]>10){if(i<a)a=i;if(i>e)e=i;if(y<b)b=y;if(y>f)f=y}
  if(e<a)return"";const p=8,W=e-a+p*2,H=f-b+p*2,o=document.createElement("canvas");o.width=W;o.height=H;o.getContext("2d").drawImage(c,a-p,b-p,W,H,0,0,W,H);return o.toDataURL("image/png")}
@@ -1167,7 +1169,7 @@ function ask(msg,o={}){return new Promise(res=>{const del=/^Hapus/.test(msg),inp
 const say=(msg,title)=>ask(msg,{title:title||"Info",ok:"Mengerti",cancel:""});
 
 /* ================= sheet & toast ================= */
-function openS(h){$("#shp").innerHTML=h.startsWith('<div class="grab">')?h:`<div class="grab"></div>`+h;$("#sh").classList.add("op");fitA4();guard()}
+function openS(h){$("#shp").innerHTML=h.startsWith('<div class="grab">')?h:`<div class="grab"></div>`+h;$("#sh").classList.add("op");fitA4();navTop()}
 function closeS(){$("#sh").classList.remove("op")}
 let tt;function toast(m){const e=$("#toast");e.textContent=m;e.classList.add("on");clearTimeout(tt);tt=setTimeout(()=>e.classList.remove("on"),2000)}
 function imgToData(file,max=700){return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>{const im2=new Image();im2.onload=()=>{const k=Math.min(1,max/Math.max(im2.width,im2.height)),c=document.createElement("canvas");c.width=Math.round(im2.width*k);c.height=Math.round(im2.height*k);c.getContext("2d").drawImage(im2,0,0,c.width,c.height);res(c.toDataURL("image/png"))};im2.onerror=rej;im2.src=r.result};r.onerror=rej;r.readAsDataURL(file)})}
@@ -1178,7 +1180,7 @@ document.addEventListener("click",async e=>{if(e.target.closest("#dlg"))return;
  const g=e.target.closest("[data-go]");if(g){go(g.dataset.go);return}
  const a=e.target.closest("[data-act]");if(!a)return;const d=a.dataset,act=d.act,inv=()=>db.invoices.find(i=>i.id===d.id);
  switch(act){
- case"back":back();break;
+ case"back":if(!KD&&NS>0)history.back();else back();break;
  case"non":nEnable();break;
  case"noff":lsSet("einmorf_notif","");nTm.forEach(clearTimeout);render();break;
  case"ntest":notifyToday(true);break;
@@ -1217,6 +1219,7 @@ document.addEventListener("click",async e=>{if(e.target.closest("#dlg"))return;
  case"ntstd":if(await ask("Ganti semua poin dengan catatan standar?")){ed.notes=[...(S().notes||[])];$("#nts").innerHTML=notesHtml()}break;
  case"prev":{const A=a4Html(ed);openS(`<div class="grab"></div><div class="between" style="margin-bottom:12px"><h2 style="font-size:20px">Pratinjau A4</h2><button class="btn sm" data-act="close">Tutup</button></div><div class="a4v">${A.html}</div><p class="mu sm" style="text-align:center;margin:10px 0 0">${A.n} halaman A4</p>`);break}
  case"saveinv":{if(!ed.client.trim()){toast("Isi Bill To dulu");$('[data-f="client"]').focus();return}if(!ed.lines.length){toast("Tambahkan minimal 1 talent");return}
+  if(!signers().length||signerOf(ed).mode==="none"){toast("Buat tanda tangan dulu");sgEdit(null,"ed");return}
   const o={...ed};delete o.dueAuto;if(edId){const ix=db.invoices.findIndex(x=>x.id===edId);db.invoices[ix]={...db.invoices[ix],...o}}else db.invoices.unshift({...o,id:uid(),paid:false});
   save();const sid=edId||db.invoices[0].id;ed=null;edId=null;hist=hist.filter(v=>v!=="inv");view="inv";render(true);invSheet(sid);toast(ok()?"Invoice tersimpan":"Dibuat, tapi TIDAK tersimpan");break}
  case"incadd":incForm();break;
@@ -1265,15 +1268,16 @@ document.addEventListener("click",async e=>{if(e.target.closest("#dlg"))return;
  case"itpl":{const i=inv();i.tpl=d.k;save();const y=$("#shp").scrollTop;invSheet(i.id);$("#shp").scrollTop=y;render();break}
  case"esg":ed.signerId=d.id;rer();break;
  case"sgopen":sgEdit(d.id,"set");break;
+ case"sgedit":sgEdit(d.id,"ed");break;
  case"sgnew":sgEdit(null,d.ctx);break;
  case"sgm":SG.name=$("#sg_n").value;SG.role=$("#sg_r").value;SG.mode=d.k;if(d.k!=="draw"&&!SG.drawn){}sgDraw();break;
- case"padclr":SG.tmp="";SG.drawn=false;sgDraw();break;
+ case"padclr":{SG.tmp="";SG.drawn=false;const c=$("#pad");if(c)c.getContext("2d").clearRect(0,0,c.width,c.height);break}
  case"sgup":IMGK="__sig";$("#imgin").click();break;
  case"sgdef":S().defSigner=SG.id;save();render();sgDraw();toast("Jadi penanda tangan default");break;
- case"sgdel":if(await ask("Hapus penanda tangan "+SG.name+"?",{ok:"Hapus",danger:true})){const L=S().signers=signers().filter(x=>x.id!==SG.id);if(S().defSigner===SG.id)S().defSigner=L[0].id;save();closeS();render()}break;
- case"sgsave":{const nm2=$("#sg_n").value.trim();if(!nm2){toast("Isi nama penanda tangan");return}
+ case"sgdel":if(await ask("Hapus penanda tangan "+SG.name+"?",{ok:"Hapus",danger:true})){const L=S().signers=signers().filter(x=>x.id!==SG.id);if(S().defSigner===SG.id)S().defSigner=(L[0]||{}).id||"";save();closeS();render()}break;
+ case"sgsave":{const nm2=$("#sg_n").value.trim();if(!nm2){toast("Isi nama lengkap dulu");$("#sg_n").focus();return}if(SG.mode==="draw"&&$("#pad"))SG.tmp=trimCanvas($("#pad"));
   const mode=SG.mode==="type"?"type":"img",img=mode==="img"?SG.tmp:"";if(mode==="img"&&!img){toast(SG.mode==="draw"?"Gambar tanda tangan dulu":"Pilih foto tanda tangan dulu");return}
-  const o={id:SG.id||"s"+uid(),name:nm2,role:$("#sg_r").value.trim(),mode,img};const L=signers(),ix=L.findIndex(x=>x.id===o.id);if(ix>=0)L[ix]=o;else L.push(o);S().signers=L;
+  const o={id:SG.id||"s"+uid(),name:nm2,role:$("#sg_r").value.trim(),mode,img,src:SG.mode};if(!S().defSigner)S().defSigner=o.id;const L=signers(),ix=L.findIndex(x=>x.id===o.id);if(ix>=0)L[ix]=o;else L.push(o);S().signers=L;
   if(SGctx==="ed"&&ed)ed.signerId=o.id;save();closeS();if(view==="new")rer();else render();toast("Tanda tangan disimpan");break}
  case"rmimg":S()[d.k]="";save();render();break;
  case"share":shareSheet();break;
@@ -1317,17 +1321,23 @@ if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>fitA4());
 
 /* ================= HP: tombol back, geser antar tab, lanjut di posisi terakhir ================= */
 const isMob=()=>matchMedia("(max-width:759px)").matches,TABS=["home","inv","cal","inc"],UIK="einmorf_ui",VIEWS=["home","inv","inc","cal","set"];
-let guarded=false;
 const shOpen=()=>$("#sh").classList.contains("op"),dlgOpen=()=>$("#dlg").classList.contains("on"),lkOpen=()=>$("#lk").classList.contains("on");
-const atRoot=()=>view==="home"&&!shOpen()&&!dlgOpen();
-function guard(force){if(!guarded&&(force||!atRoot())){try{history.pushState({g:1},"")}catch(e){}guarded=true}}
-window.addEventListener("popstate",async()=>{guarded=false;
- if(lkOpen()){guard(true);return}
- if(dlgOpen()){$("#dlg").click()}
- else if(shOpen())closeS();
- else if(view==="new"&&ed){guard(true);if(await ask("Isian invoice yang belum disimpan akan hilang.",{title:"Tutup form invoice?",ok:"Tutup",cancel:"Lanjut mengisi"}))back();return}
- else if(view!=="home")back();
- setTimeout(()=>guard(),0)});
+/* Riwayat tombol back: setiap langkah yang bisa di-"back" punya satu entri riwayat. Entri dibuat saat pengguna menyentuh layar
+   (supaya HP tidak melewatinya). Di Beranda, back pertama memunculkan "tekan sekali lagi", back kedua baru menutup aplikasi. */
+let NS=0,navIgn=0,navAsk=false;
+const navNeed=()=>Math.min(40,(dlgOpen()?1:0)+(shOpen()?1:0)+(view==="home"?0:Math.max(1,hist.length))+1);
+function navTop(){if(KD)return;const need=navNeed();while(NS<need){NS++;try{history.pushState({n:NS},"")}catch(e){NS--;break}}}
+try{history.replaceState({n:0},"")}catch(e){}
+document.addEventListener("pointerdown",()=>navTop(),true);document.addEventListener("keydown",()=>navTop(),true);
+window.addEventListener("popstate",async e=>{if(navIgn){navIgn--;NS=(e.state&&e.state.n)||0;return}NS=(e.state&&e.state.n)||0;
+ if(navAsk)return;
+ if(lkOpen())return;
+ if(dlgOpen()){$("#dlg").click();return}
+ if(shOpen()){closeS();return}
+ if(view==="new"&&ed){navAsk=true;const r=await ask("Isian invoice yang belum disimpan akan hilang.",{title:"Tutup form invoice?",ok:"Tutup",cancel:"Lanjut mengisi"});navAsk=false;if(r)back();return}
+ if(view!=="home"){back();return}
+ if(NS>0){navIgn=1;history.go(-NS)}
+ toast("Tekan kembali sekali lagi untuk keluar")});
 function uiSave(){try{lsSet(UIK,JSON.stringify({v:VIEWS.includes(view)?view:"home",cv,cd,t:Date.now()}))}catch(e){}}
 document.addEventListener("visibilitychange",()=>{if(document.hidden)uiSave()});
 function pgAnim(dir){const m=$("#scr");if(!m)return;m.classList.remove("pg-l","pg-r");void m.offsetWidth;m.classList.add(dir>0?"pg-l":"pg-r");setTimeout(()=>m.classList.remove("pg-l","pg-r"),320)}
@@ -1368,7 +1378,7 @@ function nCard(){if(KD)return"";const on=nOn(),den=NOK()&&Notification.permissio
  return`<div class="fc"><h2>Notifikasi agenda</h2><p class="hint">${on?"Aktif. Tiap hari saat Einmorf dibuka kamu dapat ringkasan agenda hari ini (acara, jatuh tempo, agenda pribadi), plus pengingat 15 menit sebelum acara berjam.":den?"Izin notifikasi diblokir. Buka pengaturan situs / aplikasi untuk mengizinkan.":"Tampilkan ringkasan agenda hari ini dan pengingat 15 menit sebelum acara di HP-mu."}</p><div class="flx" style="flex-wrap:wrap;margin-top:10px">${on?`<button class="btn sm pr" data-act="ntest">Kirim ringkasan sekarang</button><button class="btn sm" data-act="noff">Matikan</button>`:`<button class="btn sm pr" data-act="non">Aktifkan notifikasi</button>`}</div></div>`}
 
 /* ================= Pembaruan otomatis ================= */
-const APPV="1.1.0";let upReady=false;
+const APPV="1.1.1";let upReady=false;
 function upReload(){uiSave();try{if(conn.mode==="gdrive"){gCache();if(gPend)gFlush()}else if(pend)wr()}catch(e){}setTimeout(()=>location.reload(),400)}
 function upToast(){if($("#upt"))return;const d=document.createElement("div");d.id="upt";d.innerHTML=`<span>Versi baru Einmorf siap.</span><button class="btn sm pr" data-act="upnow">Muat sekarang</button>`;document.body.appendChild(d)}
 async function upCheck(manual){try{const r=await navigator.serviceWorker.getRegistration();if(r){await r.update();if(manual)setTimeout(()=>{if(!upReady)say("Einmorf sudah versi terbaru ("+APPV+").","Pembaruan")},2500)}}catch(e){if(manual)say("Tidak bisa cek pembaruan. Periksa internet.","Pembaruan")}}
