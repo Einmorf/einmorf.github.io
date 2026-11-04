@@ -502,6 +502,7 @@ html,body{overscroll-behavior-y:none}
 mark.hl{background:#eef0b0;color:#121213;border-radius:4px;padding:0 2px}
 .ivev{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:700;margin-top:8px}.ivev svg{opacity:.7;flex:none}
 .gres{padding-top:20px}.hero.hsq{padding-bottom:24px}.gres .sec{margin-top:6px}
+.gsr.gtop{margin:0 0 18px}.csr{margin:0 18px;padding-top:calc(14px + var(--safe-t))}#cbody .calh{padding-top:12px}.csr .gsr{margin-top:0;background:var(--c1);border:1px solid var(--line);box-shadow:none}#cbody .ires{margin:0 18px 10px}
 </style>
 </head>
 <body>
@@ -820,7 +821,7 @@ const money=n=>`<span class="bv${hide?" on":""}">${rp(n)}</span>`,moneyk=n=>`<sp
 
 
 /* ================= Pencarian (invoice & umum) ================= */
-let iq="",ifld="all",imode="mirip",hq="";
+let iq="",ifld="all",imode="mirip",hq="",cq="";
 const IFLD={all:"Semua kolom",client:"Bill To / klien",ev:"Nama acara",no:"No. invoice",venue:"Lokasi",talent:"Talent"};
 const nrm=x=>String(x||"").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"");
 function lev(a,b){if(a===b)return 0;const m=a.length,n=b.length;if(!m||!n)return m||n;let p=[...Array(n+1).keys()];for(let i=1;i<=m;i++){const c=[i];for(let j=1;j<=n;j++)c[j]=Math.min(p[j]+1,c[j-1]+1,p[j-1]+(a[i-1]===b[j-1]?0:1));p=c}return p[n]}
@@ -850,7 +851,7 @@ function gResults(){const q=hq.trim(),m=t=>qMatch(q,t,"mirip"),h=x=>hlq(x,q,"mir
  const pkR=PK.map(k=>`<button class="row" data-act="pkedit" data-id="${k.id}"><span class="ic" style="background:#e9e9e6">${ico("grid",20)}</span><span class="tx"><b>${h(k.name)}</b><small>Paket · ${(k.lines||[]).length} talent</small></span></button>`).join("");
  const tot=IV.length+EV.length+IN.length+CT.length+PK.length;
  return`<div class="gres"><p class="ires">${tot} hasil untuk "<b>${esc(q)}</b>"</p>${sec("Invoice",IV.length,ivR)}${sec("Jadwal & agenda",EV.length,evR)}${sec("Pemasukan",IN.length,inR)}${sec("Kategori talent",CT.length,ctR)}${sec("Paket",PK.length,pkR)}${tot?"":`<div class="empty" style="margin:0 18px">Tidak ada yang cocok. Coba kata lain.</div>`}</div>`}
-document.addEventListener("input",e=>{const t=e.target;if(t.id==="iq"){iq=t.value;const L=$("#ivlist");if(L)L.innerHTML=invList()}else if(t.id==="hq"){hq=t.value;const b=$("#hbody"),h=$(".hero");if(h)h.classList.toggle("hsq",!!hq.trim());if(b)b.innerHTML=hq.trim()?gResults():homeBody()}});
+document.addEventListener("input",e=>{const t=e.target;if(t.id==="iq"){iq=t.value;const L=$("#ivlist");if(L)L.innerHTML=invList()}else if(t.id==="cq"){cq=t.value;const b=$("#cbody");if(b){const d=D(cd);b.innerHTML=cq.trim()?calResults():calMain(`${MF[d.getMonth()]} ${d.getFullYear()}`);if(!cq.trim()&&cv==="week")weekScroll()}}else if(t.id==="hq"){hq=t.value;const b=$("#hbody"),h=$(".hero");if(h)h.classList.toggle("hsq",!!hq.trim());if(b)b.innerHTML=hq.trim()?gResults():homeBody()}});
 document.addEventListener("change",e=>{if(e.target.id==="ifld"){ifld=e.target.value;const L=$("#ivlist");if(L)L.innerHTML=invList()}});
 /* ================= navigasi ================= */
 function go(v){if(v==="inc"&&view!=="inc")incHide=true;if(v===view){closeS();render();return}if(view!=="new")hist.push(view);if(v!=="new"){ed=null;edId=null}else if(!ed)newEd();view=v;wkScroll=true;closeS();render(true);navTop()}
@@ -877,9 +878,9 @@ function vHome(){
  const ag=evRange(TD,add(14)).slice(0,5);
  const acts=actTab==="ag"?(ag.length?ag.map(agRow).join(""):`<div class="empty">Tidak ada agenda 2 minggu ke depan. <span class="lk" data-act="evnew">Tambah agenda</span></div>`)
   :(un.length?[...un].sort((a,b)=>(a.dDue||"9")<(b.dDue||"9")?-1:1).slice(0,5).map(invRow).join(""):`<div class="empty">Semua tagihan sudah lunas. Mantap!</div>`);
- return`<section class="hero${hq.trim()?" hsq":""}"><div class="hrow"><span class="ava">${s.logo?`<img src="${s.logo}" alt="">`:`<img src="${LG_MARKW}" alt="Einmorf" style="background:none;padding:7px">`}</span><div class="hi"><b>Halo${s.name?" "+esc(s.name.split(" ")[0]):""},</b><small>${esc(s.company||"Einmorf Dashboard")}</small></div>
+ return`<section class="hero${hq.trim()?" hsq":""}"><label class="gsr gtop">${ico("search",18)}<input id="hq" type="search" value="${esc(hq)}" placeholder="Cari invoice, jadwal, acara, klien, talent…" autocomplete="off">${hq?`<button class="x" data-act="hqx" aria-label="Hapus">${ico("x",16)}</button>`:""}</label><div class="hrow"><span class="ava">${s.logo?`<img src="${s.logo}" alt="">`:`<img src="${LG_MARKW}" alt="Einmorf" style="background:none;padding:7px">`}</span><div class="hi"><b>Halo${s.name?" "+esc(s.name.split(" ")[0]):""},</b><small>${esc(s.company||"Einmorf Dashboard")}</small></div>
   <button class="bell" style="margin-left:auto" data-act="notif" aria-label="Pengingat">${ico("bell",21)}${alerts?"<i></i>":""}</button><button class="bell" data-go="set" aria-label="Pengaturan">${ico("gear",21)}</button></div>
-  <div class="hsub">${greet()} · ${new Date().toLocaleDateString("id-ID",{weekday:"long",day:"numeric",month:"long"})}</div><div style="margin-top:10px">${stChip()}</div><label class="gsr">${ico("search",18)}<input id="hq" type="search" value="${esc(hq)}" placeholder="Cari invoice, jadwal, acara, klien, talent…" autocomplete="off">${hq?`<button class="x" data-act="hqx" aria-label="Hapus">${ico("x",16)}</button>`:""}</label></section>
+  <div class="hsub">${greet()} · ${new Date().toLocaleDateString("id-ID",{weekday:"long",day:"numeric",month:"long"})}</div><div style="margin-top:10px">${stChip()}</div></section>
  <div id="hbody">${hq.trim()?gResults():homeBody()}</div>`}
 function homeBody(){const s=S(),y=String(new Date().getFullYear()),IY=db.invoices.filter(i=>(i.dIn||"").slice(0,4)===y),billed=IY.reduce((a,i)=>a+calc(i).total,0),coll=IY.reduce((a,i)=>a+paidAmt(i),0),pct=billed?Math.round(coll/billed*100):0,pc=IY.filter(i=>i.paid).length,
  un=unpaid(),tot=un.reduce((a,i)=>a+calc(i).due,0),lt=un.filter(late),ym=TD.slice(0,7),mInc=recs().filter(r=>r.date.slice(0,7)===ym).reduce((a,r)=>a+r.amt,0),
@@ -1057,9 +1058,13 @@ function incForm(){openS(`<div class="grab"></div><h2 style="font-size:20px">Cat
 const wkStart=s=>add(-D(s).getDay(),s);
 function vCal(){const d=D(cd);let title=`${MF[d.getMonth()]} ${d.getFullYear()}`;
  if(cv==="week"){const a=D(wkStart(cd)),b=D(add(6,wkStart(cd)));title=a.getMonth()===b.getMonth()?`${MF[a.getMonth()]} ${a.getFullYear()}`:`${MN[a.getMonth()]} – ${MN[b.getMonth()]} ${b.getFullYear()}`}
- return`<div class="calh"><div class="mtl">${title}</div><button class="cb" data-act="cnav" data-n="-1" aria-label="Sebelumnya">${ico("chL",16)}</button><button class="cb" data-act="cnav" data-n="1" aria-label="Berikutnya">${ico("chR",16)}</button><button class="tdy" data-act="ctoday" title="Hari ini">${new Date().getDate()}</button></div>
+ return`<div class="csr"><label class="gsr">${ico("search",18)}<input id="cq" type="search" value="${esc(cq)}" placeholder="Cari agenda, acara, klien, lokasi…" autocomplete="off">${cq?`<button class="x" data-act="cqx" aria-label="Hapus">${ico("x",16)}</button>`:""}</label></div><div id="cbody">${cq.trim()?calResults():calMain(title)}</div><button class="cfab" data-act="evnew" aria-label="Tambah agenda">${ico("plus",26,2.2)}</button>`}
+function calMain(title){return`<div class="calh"><div class="mtl">${title}</div><button class="cb" data-act="cnav" data-n="-1" aria-label="Sebelumnya">${ico("chL",16)}</button><button class="cb" data-act="cnav" data-n="1" aria-label="Berikutnya">${ico("chR",16)}</button><button class="tdy" data-act="ctoday" title="Hari ini">${new Date().getDate()}</button></div>
  <div class="seg"><button class="${cv==="month"?"on":""}" data-act="cv" data-k="month">Bulan</button><button class="${cv==="week"?"on":""}" data-act="cv" data-k="week">Minggu</button><button class="${cv==="agenda"?"on":""}" data-act="cv" data-k="agenda">Agenda</button></div>
- ${cv==="month"?calMonth():cv==="week"?calWeek():calAgenda()}<button class="cfab" data-act="evnew" aria-label="Tambah agenda">${ico("plus",26,2.2)}</button>`}
+ ${cv==="month"?calMonth():cv==="week"?calWeek():calAgenda()}`}
+function calResults(){const q=cq.trim(),m=t=>qMatch(q,t,"mirip"),h=x=>hlq(x,q,"mirip");const L=evRange(add(-365),add(365)).filter(e=>m([e.title,e.note,e.venue].join(" ")));
+ const seen=new Set(),U=[];[...L.filter(e=>e.date>=TD),...L.filter(e=>e.date<TD).reverse()].forEach(e=>{const k=e.src==="ev"?e.id:e.key;if(seen.has(k))return;seen.add(k);U.push(e)});
+ return`<p class="ires">${U.length} agenda cocok dengan "<b>${esc(q)}</b>"</p><div class="list">${U.slice(0,40).map(e=>{const d=D(e.date);return`<button class="row" data-act="evo" data-k="${e.key}" data-d="${e.date}"><span class="ic" style="background:${e.color}">${d.getDate()}<small>${WD[d.getDay()]}</small></span><span class="tx"><b>${h(e.title)}</b><small>${e.date===TD?"Hari ini":fds(e.date)+" "+d.getFullYear()} · ${tLbl(e)}${e.note?" · "+h(e.note):""}${e.rep==="w"?" · setiap minggu":""}</small></span></button>`}).join("")||`<div class="empty">Tidak ada agenda yang cocok.</div>`}</div>`}
 function calMonth(){const d=D(cd),y=d.getFullYear(),m=d.getMonth(),f=iso(new Date(y,m,1)),st=wkStart(f),days=new Date(y,m+1,0).getDate(),wk=Math.ceil((D(f).getDay()+days)/7),E=byDate(evRange(st,add(wk*7-1,st)));
  let h=WD.map((w,i)=>`<div class="wdn ${new Date().getDay()===i?"t":""}">${w}</div>`).join("");
  for(let i=0;i<wk*7;i++){const ds=add(i,st),dd2=D(ds),ev=E[ds]||[],out=dd2.getMonth()!==m,show=ev.slice(0,3);
@@ -1259,6 +1264,7 @@ document.addEventListener("click",async e=>{if(e.target.closest("#dlg"))return;
  case"imode":imode=d.k;document.querySelectorAll('[data-act="imode"]').forEach(b=>b.classList.toggle("on",b.dataset.k===imode));$("#ivlist").innerHTML=invList();break;
  case"iqx":iq="";render();setTimeout(()=>{const x=$("#iq");if(x)x.focus()},0);break;
  case"hqx":hq="";render();break;
+ case"cqx":cq="";render();break;
  case"opinv":invSheet(d.id);break;
  case"pay":{const i=inv();i.paid=!i.paid;i.paidAt=i.paid?TD:null;save();render();invSheet(i.id);toast(i.paid?"Lunas · masuk pendapatan":"Status lunas dibatalkan");break}
  case"wa":window.open("https://wa.me/?text="+encodeURIComponent(waText(inv())),"_blank","noopener");break;
@@ -1436,7 +1442,7 @@ function nCard(){if(KD)return"";const on=nOn(),den=NOK()&&Notification.permissio
  return`<div class="fc"><h2>Notifikasi agenda</h2><p class="hint">${on?"Aktif. Tiap hari saat Einmorf dibuka kamu dapat ringkasan agenda hari ini (acara, jatuh tempo, agenda pribadi), plus pengingat 15 menit sebelum acara berjam.":den?"Izin notifikasi diblokir. Buka pengaturan situs / aplikasi untuk mengizinkan.":"Tampilkan ringkasan agenda hari ini dan pengingat 15 menit sebelum acara di HP-mu."}</p><div class="flx" style="flex-wrap:wrap;margin-top:10px">${on?`<button class="btn sm pr" data-act="ntest">Kirim ringkasan sekarang</button><button class="btn sm" data-act="noff">Matikan</button>`:`<button class="btn sm pr" data-act="non">Aktifkan notifikasi</button>`}</div></div>`}
 
 /* ================= Pembaruan otomatis ================= */
-const APPV="1.1.2";let upReady=false;
+const APPV="1.1.3";let upReady=false;
 function upReload(){uiSave();try{if(conn.mode==="gdrive"){gCache();if(gPend)gFlush()}else if(pend)wr()}catch(e){}setTimeout(()=>location.reload(),400)}
 function upToast(){if($("#upt"))return;const d=document.createElement("div");d.id="upt";d.innerHTML=`<span>Versi baru Einmorf siap.</span><button class="btn sm pr" data-act="upnow">Muat sekarang</button>`;document.body.appendChild(d)}
 async function upCheck(manual){try{const r=await navigator.serviceWorker.getRegistration();if(r){await r.update();if(manual)setTimeout(()=>{if(!upReady)say("Einmorf sudah versi terbaru ("+APPV+").","Pembaruan")},2500)}}catch(e){if(manual)say("Tidak bisa cek pembaruan. Periksa internet.","Pembaruan")}}
