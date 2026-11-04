@@ -490,6 +490,18 @@ html,body{overscroll-behavior-y:none}
 @keyframes pgl{from{opacity:.25;transform:translateX(36px)}to{opacity:1;transform:none}}
 @keyframes pgr{from{opacity:.25;transform:translateX(-36px)}to{opacity:1;transform:none}}
 #upt{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(104px + var(--safe-b));z-index:92;display:flex;align-items:center;gap:12px;background:#1d1d20;border:1px solid var(--line);color:var(--tx);border-radius:18px;padding:10px 10px 10px 16px;box-shadow:0 12px 30px rgba(0,0,0,.5);white-space:nowrap;font-size:14px}
+
+/* ===== Pencarian ===== */
+.gsr{margin-top:14px;display:flex;align-items:center;gap:8px;background:#121213;color:var(--tx);border-radius:18px;padding:0 6px 0 14px;box-shadow:0 8px 20px rgba(0,0,0,.18)}
+.gsr input{background:none;border:0;padding:13px 0;color:var(--tx);flex:1}
+.gsr .x{width:34px;height:34px;border-radius:12px;display:grid;place-items:center;color:var(--mu)}
+.isr{margin:0 18px 12px}.isr .gsr{margin-top:0;background:var(--c1);border:1px solid var(--line);box-shadow:none}
+.ifl{display:flex;gap:8px;margin-top:8px;align-items:center}.ifl select{flex:1;padding:9px 12px;border-radius:99px;font-size:13px;font-weight:600}
+.ifl .segm{margin:0;flex:none}.ifl .segm button{padding:7px 14px;flex:none}.segm button.on{background:var(--tx);color:#121213}
+.ires{font-size:12px;color:var(--mu);margin:0 18px 10px}
+mark.hl{background:#eef0b0;color:#121213;border-radius:4px;padding:0 2px}
+.ivev{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:700;margin-top:8px}.ivev svg{opacity:.7;flex:none}
+.gres{padding-top:20px}.hero.hsq{padding-bottom:24px}.gres .sec{margin-top:6px}
 </style>
 </head>
 <body>
@@ -527,6 +539,7 @@ const ord=n=>{const v=n%100;return v>10&&v<14?"th":["th","st","nd","rd"][n%10]||
 const dateEN=s=>{if(!s)return"-";const d=D(s);return`${MEN[d.getMonth()]} ${d.getDate()}<sup>${ord(d.getDate())}</sup> ${d.getFullYear()}`};
 
 const IC={
+ search:'<circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/>',
  home:'<path d="M3 11l9-7 9 7v9a1 1 0 01-1 1h-5v-6h-6v6H4a1 1 0 01-1-1z"/>',
  inv:'<path d="M6 3h8l4 4v14H6zM14 3v4h4M9 12h6M9 16h6"/>',
  inc:'<path d="M3 17l6-6 4 4 8-8M15 7h6v6"/>',
@@ -805,6 +818,40 @@ let view="home",hist=[],hide=true,incHide=true,actTab="ag",invF="all",iy=new Dat
 let cv="month",cd=TD,agN=60,wkScroll=true;
 const money=n=>`<span class="bv${hide?" on":""}">${rp(n)}</span>`,moneyk=n=>`<span class="bv${hide?" on":""}">${rpk(n)}</span>`;
 
+
+/* ================= Pencarian (invoice & umum) ================= */
+let iq="",ifld="all",imode="mirip",hq="";
+const IFLD={all:"Semua kolom",client:"Bill To / klien",ev:"Nama acara",no:"No. invoice",venue:"Lokasi",talent:"Talent"};
+const nrm=x=>String(x||"").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"");
+function lev(a,b){if(a===b)return 0;const m=a.length,n=b.length;if(!m||!n)return m||n;let p=[...Array(n+1).keys()];for(let i=1;i<=m;i++){const c=[i];for(let j=1;j<=n;j++)c[j]=Math.min(p[j]+1,c[j-1]+1,p[j-1]+(a[i-1]===b[j-1]?0:1));p=c}return p[n]}
+function qMatch(q,txt,mode){q=nrm(q).trim();if(!q)return true;txt=nrm(txt);if(mode==="persis")return txt.includes(q);const W=txt.split(/[^a-z0-9]+/).filter(Boolean);
+ return q.split(/\s+/).every(t=>txt.includes(t)||W.some(w=>w.startsWith(t)||(t.length>=4&&(lev(w,t)<=(t.length>=7?2:1)||lev(w.slice(0,t.length),t)<=1))))}
+function hlq(x,q,mode){x=String(x||"");q=String(q||"").trim();if(!q)return esc(x);const T=mode==="persis"?[q]:q.split(/\s+/).filter(t=>t.length>1);if(!T.length)return esc(x);
+ const re=new RegExp("("+T.map(t=>t.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")).join("|")+")","gi");return x.split(re).map((p,k)=>k%2?`<mark class="hl">${esc(p)}</mark>`:esc(p)).join("")}
+const hl=x=>hlq(x,iq,imode);
+const invTxt=(i,f)=>f==="client"?i.client:f==="ev"?i.evName:f==="no"?i.no:f==="venue"?i.venue:f==="talent"?(i.lines||[]).map(l=>l.name+" "+cname(l.cat)).join(" "):[i.client,i.no,i.evName,i.venue,i.title,i.sales,(i.lines||[]).map(l=>l.name+" "+cname(l.cat)).join(" ")].join(" · ");
+const invHit=i=>qMatch(iq,invTxt(i,ifld),imode);
+function invList(){const L=db.invoices.filter(i=>invF==="all"||(invF==="no"&&!i.paid&&!late(i))||(invF==="late"&&late(i))||(invF==="ok"&&i.paid)).filter(invHit).sort((a,b)=>(a.paid-b.paid)||((a.dDue||"9")<(b.dDue||"9")?-1:1));
+ return`${iq.trim()?`<p class="ires">${L.length} invoice cocok dengan "<b>${esc(iq.trim())}</b>"${ifld!=="all"?" di "+IFLD[ifld]:""}</p>`:""}<div class="list ivl">${L.map(ivCard).join("")||`<div class="empty">${iq.trim()?"Tidak ada yang cocok. Coba kata lain, ganti kolom, atau pilih mode Mirip.":"Tidak ada invoice di sini."}</div>`}</div>`}
+function invSearchBar(){return`<div class="isr"><label class="gsr">${ico("search",18)}<input id="iq" type="search" value="${esc(iq)}" placeholder="Cari Bill To, nama acara, no. invoice, lokasi…" autocomplete="off">${iq?`<button class="x" data-act="iqx" aria-label="Hapus">${ico("x",16)}</button>`:""}</label>
+ <div class="ifl"><select id="ifld">${Object.entries(IFLD).map(([k,v])=>`<option value="${k}"${ifld===k?" selected":""}>${v}</option>`).join("")}</select><div class="segm">${[["mirip","Mirip"],["persis","Persis"]].map(([k,l])=>`<button class="${imode===k?"on":""}" data-act="imode" data-k="${k}">${l}</button>`).join("")}</div></div></div>`}
+/* pencarian umum di Beranda */
+function gResults(){const q=hq.trim(),m=t=>qMatch(q,t,"mirip"),h=x=>hlq(x,q,"mirip"),sec=(t,n,body)=>n?`<div class="sec"><h2>${t} <span class="mu sm">${n}</span></h2></div><div class="list">${body}</div>`:"";
+ const IV=db.invoices.filter(i=>m(invTxt(i,"all"))).sort((a,b)=>(b.dIn||"")<(a.dIn||"")?-1:1);
+ const ivR=IV.slice(0,8).map(i=>{const c=calc(i);return`<button class="row" data-act="opinv" data-id="${i.id}"><span class="ic" style="background:${ccol(i.lines[0]?.cat)}">${ico(cico(i.lines[0]?.cat),20)}</span><span class="tx"><b>${h(i.client||"Tanpa nama")}</b><small>${h(i.evName||"-")} · No. ${h(i.no)}${i.evDate?" · "+fds(i.evDate):""}</small></span><span class="rt">${money(i.paid?c.total:c.due)}<small class="mu">${i.paid?"Lunas":late(i)?"Terlambat":"Belum"}</small></span></button>`}).join("");
+ const EV=[];db.events.forEach(e=>{if(!m([e.title,e.note,e.venue].join(" ")))return;let d=e.date;if(e.rep==="w"&&d<TD){const x=D(TD);x.setDate(x.getDate()+((D(e.date).getDay()-x.getDay()+7)%7));d=iso(x);if(e.until&&d>e.until)d=e.date}
+  EV.push({...e,date:d,key:e.rep==="w"?e.id+"_"+d:e.id})});EV.sort((a,b)=>Math.abs(dd(a.date))-Math.abs(dd(b.date)));
+ const evR=EV.slice(0,8).map(e=>{const x=D(e.date);return`<button class="row" data-act="evo" data-k="${e.key}" data-d="${e.date}"><span class="ic" style="background:${e.color||"#d6d6f2"}">${x.getDate()}<small>${WD[x.getDay()]}</small></span><span class="tx"><b>${h(e.title)}</b><small>${fds(e.date)}${e.rep==="w"?" · setiap minggu":""}${e.note?" · "+h(e.note):""}</small></span></button>`}).join("");
+ const IN=db.income.filter(x=>m([x.note,cname(x.type)].join(" "))).sort((a,b)=>(b.date||"")<(a.date||"")?-1:1);
+ const inR=IN.slice(0,6).map(x=>`<button class="row" data-go="inc"><span class="ic" style="background:${ccol(x.type)}">${ico(cico(x.type),20)}</span><span class="tx"><b>${h(x.note||"Pemasukan manual")}</b><small>${fds(x.date)} · ${esc(cname(x.type))}</small></span><span class="rt">${money(+x.amount||0)}</span></button>`).join("");
+ const CT=db.cats.filter(c=>m(c.name+" "+(c.notes||[]).map(n=>n.t+" "+n.d).join(" ")));
+ const ctR=CT.map(c=>`<button class="row" data-act="catd" data-id="${c.id}"><span class="ic" style="background:${ccol(c.id)}">${ico(cico(c.id),20)}</span><span class="tx"><b>${h(c.name)}</b><small>Kategori talent</small></span></button>`).join("");
+ const PK=db.packages.filter(k=>m(k.name+" "+(k.lines||[]).map(l=>l.name).join(" ")));
+ const pkR=PK.map(k=>`<button class="row" data-act="pkedit" data-id="${k.id}"><span class="ic" style="background:#e9e9e6">${ico("grid",20)}</span><span class="tx"><b>${h(k.name)}</b><small>Paket · ${(k.lines||[]).length} talent</small></span></button>`).join("");
+ const tot=IV.length+EV.length+IN.length+CT.length+PK.length;
+ return`<div class="gres"><p class="ires">${tot} hasil untuk "<b>${esc(q)}</b>"</p>${sec("Invoice",IV.length,ivR)}${sec("Jadwal & agenda",EV.length,evR)}${sec("Pemasukan",IN.length,inR)}${sec("Kategori talent",CT.length,ctR)}${sec("Paket",PK.length,pkR)}${tot?"":`<div class="empty" style="margin:0 18px">Tidak ada yang cocok. Coba kata lain.</div>`}</div>`}
+document.addEventListener("input",e=>{const t=e.target;if(t.id==="iq"){iq=t.value;const L=$("#ivlist");if(L)L.innerHTML=invList()}else if(t.id==="hq"){hq=t.value;const b=$("#hbody"),h=$(".hero");if(h)h.classList.toggle("hsq",!!hq.trim());if(b)b.innerHTML=hq.trim()?gResults():homeBody()}});
+document.addEventListener("change",e=>{if(e.target.id==="ifld"){ifld=e.target.value;const L=$("#ivlist");if(L)L.innerHTML=invList()}});
 /* ================= navigasi ================= */
 function go(v){if(v==="inc"&&view!=="inc")incHide=true;if(v===view){closeS();render();return}if(view!=="new")hist.push(view);if(v!=="new"){ed=null;edId=null}else if(!ed)newEd();view=v;wkScroll=true;closeS();render(true);navTop()}
 function back(){const v=hist.pop()||"home";ed=null;edId=null;view=v;render(true)}
@@ -830,10 +877,18 @@ function vHome(){
  const ag=evRange(TD,add(14)).slice(0,5);
  const acts=actTab==="ag"?(ag.length?ag.map(agRow).join(""):`<div class="empty">Tidak ada agenda 2 minggu ke depan. <span class="lk" data-act="evnew">Tambah agenda</span></div>`)
   :(un.length?[...un].sort((a,b)=>(a.dDue||"9")<(b.dDue||"9")?-1:1).slice(0,5).map(invRow).join(""):`<div class="empty">Semua tagihan sudah lunas. Mantap!</div>`);
- return`<section class="hero"><div class="hrow"><span class="ava">${s.logo?`<img src="${s.logo}" alt="">`:`<img src="${LG_MARKW}" alt="Einmorf" style="background:none;padding:7px">`}</span><div class="hi"><b>Halo${s.name?" "+esc(s.name.split(" ")[0]):""},</b><small>${esc(s.company||"Einmorf Dashboard")}</small></div>
+ return`<section class="hero${hq.trim()?" hsq":""}"><div class="hrow"><span class="ava">${s.logo?`<img src="${s.logo}" alt="">`:`<img src="${LG_MARKW}" alt="Einmorf" style="background:none;padding:7px">`}</span><div class="hi"><b>Halo${s.name?" "+esc(s.name.split(" ")[0]):""},</b><small>${esc(s.company||"Einmorf Dashboard")}</small></div>
   <button class="bell" style="margin-left:auto" data-act="notif" aria-label="Pengingat">${ico("bell",21)}${alerts?"<i></i>":""}</button><button class="bell" data-go="set" aria-label="Pengaturan">${ico("gear",21)}</button></div>
-  <div class="hsub">${greet()} · ${new Date().toLocaleDateString("id-ID",{weekday:"long",day:"numeric",month:"long"})}</div><div style="margin-top:10px">${stChip()}</div></section>
- <div class="hgrid"><div class="hA"><div class="pcard"><div class="ring"><svg viewBox="0 0 100 100"><defs><linearGradient id="rg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#eef0b0"/><stop offset="1" stop-color="#d6d6f2"/></linearGradient></defs><circle cx="50" cy="50" r="42" fill="none" stroke="#2a2a2e" stroke-width="11"/><circle cx="50" cy="50" r="42" fill="none" stroke="url(#rg)" stroke-width="11" stroke-linecap="round" stroke-dasharray="${C}" stroke-dashoffset="${C*(1-pct/100)}" ${pct?"":'stroke-opacity="0"'}/></svg><b>${pct}%</b></div>
+  <div class="hsub">${greet()} · ${new Date().toLocaleDateString("id-ID",{weekday:"long",day:"numeric",month:"long"})}</div><div style="margin-top:10px">${stChip()}</div><label class="gsr">${ico("search",18)}<input id="hq" type="search" value="${esc(hq)}" placeholder="Cari invoice, jadwal, acara, klien, talent…" autocomplete="off">${hq?`<button class="x" data-act="hqx" aria-label="Hapus">${ico("x",16)}</button>`:""}</label></section>
+ <div id="hbody">${hq.trim()?gResults():homeBody()}</div>`}
+function homeBody(){const s=S(),y=String(new Date().getFullYear()),IY=db.invoices.filter(i=>(i.dIn||"").slice(0,4)===y),billed=IY.reduce((a,i)=>a+calc(i).total,0),coll=IY.reduce((a,i)=>a+paidAmt(i),0),pct=billed?Math.round(coll/billed*100):0,pc=IY.filter(i=>i.paid).length,
+ un=unpaid(),tot=un.reduce((a,i)=>a+calc(i).due,0),lt=un.filter(late),ym=TD.slice(0,7),mInc=recs().filter(r=>r.date.slice(0,7)===ym).reduce((a,r)=>a+r.amt,0),
+ C=2*Math.PI*42,{L}=catStats();
+ const tile=(at,icon,label,col,extra="",on=false)=>`<button class="mt ${on?"on":""}" ${at}><span class="mi" style="background:${col}">${ico(icon,21)}</span>${label}${extra}</button>`;
+ const ag=evRange(TD,add(14)).slice(0,5);
+ const acts=actTab==="ag"?(ag.length?ag.map(agRow).join(""):`<div class="empty">Tidak ada agenda 2 minggu ke depan. <span class="lk" data-act="evnew">Tambah agenda</span></div>`)
+  :(un.length?[...un].sort((a,b)=>(a.dDue||"9")<(b.dDue||"9")?-1:1).slice(0,5).map(invRow).join(""):`<div class="empty">Semua tagihan sudah lunas. Mantap!</div>`);
+ return`<div class="hgrid"><div class="hA"><div class="pcard"><div class="ring"><svg viewBox="0 0 100 100"><defs><linearGradient id="rg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#eef0b0"/><stop offset="1" stop-color="#d6d6f2"/></linearGradient></defs><circle cx="50" cy="50" r="42" fill="none" stroke="#2a2a2e" stroke-width="11"/><circle cx="50" cy="50" r="42" fill="none" stroke="url(#rg)" stroke-width="11" stroke-linecap="round" stroke-dasharray="${C}" stroke-dashoffset="${C*(1-pct/100)}" ${pct?"":'stroke-opacity="0"'}/></svg><b>${pct}%</b></div>
   <div class="pinfo"><small>Tagihan Terkumpul ${y}</small><div class="t">${pc} dari ${IY.length} Invoice <em>Lunas</em></div><div class="lbar"><i style="width:${pct}%"></i></div></div>
   <div class="cta"><button data-go="inv">Lihat Tagihan <span>${ico("arR",18,2.2)}</span></button></div></div>
  <div class="sumc"><div class="r" style="padding-bottom:4px"><span style="font-weight:700">Ringkasan uang</span><button class="pb fx" style="height:34px;padding:0 12px" data-act="eye" aria-label="Tampilkan atau sembunyikan angka">${ico(hide?"eyeoff":"eye",17)} ${hide?"Tampilkan":"Sembunyikan"}</button></div><button class="r" data-go="inv"><span><small>Belum terbayar</small>${un.length} invoice${lt.length?` · <span class="rd">${lt.length} telat</span>`:""}</span><b>${money(tot)}</b></button><button class="r" data-go="inc"><span><small>Pendapatan bersih</small>${MF[new Date().getMonth()]}</span><b>${money(mInc)}</b></button></div>
@@ -855,12 +910,12 @@ function vInv(){
  return`${topBar(`<button class="pb" data-act="eye">${ico(hide?"eyeoff":"eye",19)}</button>`)}
  <div class="ttl"><h1>Invoice <b>Kamu</b></h1><p>Tagihan ke klien, status bayar, dan jatuh tempo.</p></div>
  <button class="addc" data-act="newinv"><div><small>Buat</small><b>Invoice baru</b></div><span>${ico("plus",16,2.2)}</span></button>
- <div class="sp"></div><div class="chips">${ch("all","Semua",db.invoices.length)}${ch("no","Belum",db.invoices.filter(i=>!i.paid&&!late(i)).length)}${ch("late","Terlambat",db.invoices.filter(late).length)}${ch("ok","Lunas",db.invoices.filter(i=>i.paid).length)}</div>
+ <div class="sp"></div>${invSearchBar()}<div class="chips">${ch("all","Semua",db.invoices.length)}${ch("no","Belum",db.invoices.filter(i=>!i.paid&&!late(i)).length)}${ch("late","Terlambat",db.invoices.filter(late).length)}${ch("ok","Lunas",db.invoices.filter(i=>i.paid).length)}</div>
  <div class="sec" style="margin-top:22px"><h2>Daftar invoice</h2></div>
- <div class="list ivl">${L.map(ivCard).join("")||`<div class="empty">Tidak ada invoice di sini.</div>`}</div>`}
+ <div id="ivlist">${invList()}</div>`}
 function ivCard(i){const c=calc(i),pa=paidAmt(i),p=c.total?Math.round(pa/c.total*100):0,lt=late(i);
- return`<button class="ivc" data-act="opinv" data-id="${i.id}"><div class="ivh"><b>${esc(i.client||"Tanpa nama")}<span class="st ${i.paid?"ok":lt?"late":"no"}">${i.paid?"Lunas":lt?"Terlambat":"Belum"}</span></b><small>Detail ›</small></div>
- <div class="pg">No. ${esc(i.no)} · ${esc(i.evName||"-")}${i.evDate?" · "+fds(i.evDate):""} · ${i.mode==="paket"?"Paket":"Satuan"}</div><div class="pgl"><span>0%</span>${p>8&&p<92?`<em style="left:${p}%">${p}%</em>`:""}<span>100%</span></div>
+ return`<button class="ivc" data-act="opinv" data-id="${i.id}"><div class="ivh"><b>${hl(i.client||"Tanpa nama")}<span class="st ${i.paid?"ok":lt?"late":"no"}">${i.paid?"Lunas":lt?"Terlambat":"Belum"}</span></b><small>Detail ›</small></div>
+ ${i.evName?`<div class="ivev">${ico("cal",14)}<span>${hl(i.evName)}</span></div>`:""}<div class="pg">No. ${hl(i.no)}${i.evDate?" · "+fds(i.evDate):""}${i.venue?" · "+hl(i.venue):""} · ${i.mode==="paket"?"Paket":"Satuan"}</div><div class="pgl"><span>0%</span>${p>8&&p<92?`<em style="left:${p}%">${p}%</em>`:""}<span>100%</span></div>
  <div class="trk"><i class="${p>=100?"full":""}" style="width:${p}%;${p===0?"border:0":""}"></i></div>
  <div class="ivf"><div><small>Total</small><b>${moneyk(c.total)}</b></div><div><small>Terbayar</small><b>${moneyk(pa)}</b></div><div><small>Jatuh tempo</small><b class="${lt?"rd":""}">${fd(i.dDue)}</b></div></div></button>`}
 function invSheet(id){const i=db.invoices.find(x=>x.id===id);if(!i)return;const c=calc(i),lt=late(i),A=a4Html(i);
@@ -1201,6 +1256,9 @@ document.addEventListener("click",async e=>{if(e.target.closest("#dlg"))return;
  case"more":moreSheet();break;
  case"at":actTab=d.k;render();break;
  case"if":invF=d.k;render();break;
+ case"imode":imode=d.k;document.querySelectorAll('[data-act="imode"]').forEach(b=>b.classList.toggle("on",b.dataset.k===imode));$("#ivlist").innerHTML=invList();break;
+ case"iqx":iq="";render();setTimeout(()=>{const x=$("#iq");if(x)x.focus()},0);break;
+ case"hqx":hq="";render();break;
  case"opinv":invSheet(d.id);break;
  case"pay":{const i=inv();i.paid=!i.paid;i.paidAt=i.paid?TD:null;save();render();invSheet(i.id);toast(i.paid?"Lunas · masuk pendapatan":"Status lunas dibatalkan");break}
  case"wa":window.open("https://wa.me/?text="+encodeURIComponent(waText(inv())),"_blank","noopener");break;
@@ -1378,7 +1436,7 @@ function nCard(){if(KD)return"";const on=nOn(),den=NOK()&&Notification.permissio
  return`<div class="fc"><h2>Notifikasi agenda</h2><p class="hint">${on?"Aktif. Tiap hari saat Einmorf dibuka kamu dapat ringkasan agenda hari ini (acara, jatuh tempo, agenda pribadi), plus pengingat 15 menit sebelum acara berjam.":den?"Izin notifikasi diblokir. Buka pengaturan situs / aplikasi untuk mengizinkan.":"Tampilkan ringkasan agenda hari ini dan pengingat 15 menit sebelum acara di HP-mu."}</p><div class="flx" style="flex-wrap:wrap;margin-top:10px">${on?`<button class="btn sm pr" data-act="ntest">Kirim ringkasan sekarang</button><button class="btn sm" data-act="noff">Matikan</button>`:`<button class="btn sm pr" data-act="non">Aktifkan notifikasi</button>`}</div></div>`}
 
 /* ================= Pembaruan otomatis ================= */
-const APPV="1.1.1";let upReady=false;
+const APPV="1.1.2";let upReady=false;
 function upReload(){uiSave();try{if(conn.mode==="gdrive"){gCache();if(gPend)gFlush()}else if(pend)wr()}catch(e){}setTimeout(()=>location.reload(),400)}
 function upToast(){if($("#upt"))return;const d=document.createElement("div");d.id="upt";d.innerHTML=`<span>Versi baru Einmorf siap.</span><button class="btn sm pr" data-act="upnow">Muat sekarang</button>`;document.body.appendChild(d)}
 async function upCheck(manual){try{const r=await navigator.serviceWorker.getRegistration();if(r){await r.update();if(manual)setTimeout(()=>{if(!upReady)say("Einmorf sudah versi terbaru ("+APPV+").","Pembaruan")},2500)}}catch(e){if(manual)say("Tidak bisa cek pembaruan. Periksa internet.","Pembaruan")}}
