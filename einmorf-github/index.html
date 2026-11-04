@@ -483,6 +483,13 @@ textarea{resize:vertical;min-height:70px}
 .fade{animation:fd .35s ease}
 @keyframes fd{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* ===== HP: tanpa tarik-untuk-refresh, transisi geser tab, pembaruan ===== */
+html,body{overscroll-behavior-y:none}
+.pg-l{animation:pgl .26s ease}.pg-r{animation:pgr .26s ease}
+@keyframes pgl{from{opacity:.25;transform:translateX(36px)}to{opacity:1;transform:none}}
+@keyframes pgr{from{opacity:.25;transform:translateX(-36px)}to{opacity:1;transform:none}}
+#upt{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(104px + var(--safe-b));z-index:92;display:flex;align-items:center;gap:12px;background:#1d1d20;border:1px solid var(--line);color:var(--tx);border-radius:18px;padding:10px 10px 10px 16px;box-shadow:0 12px 30px rgba(0,0,0,.5);white-space:nowrap;font-size:14px}
 </style>
 </head>
 <body>
@@ -806,7 +813,8 @@ function render(top){
  $("#bn").innerHTML=navHtml();document.body.classList.toggle("vnew",view==="new");
  if(top)window.scrollTo(0,0);
  if(view==="new")edSum();
- if(view==="cal"&&cv==="week")weekScroll()}
+ if(view==="cal"&&cv==="week")weekScroll();
+ uiSave();guard()}
 function navHtml(){const b=(k,i,t,x="")=>`<button class="nb ${x} ${view===k?"on":""}" data-go="${k}">${ico(i,22)}<span>${t}</span></button>`;
  return`<div class="bnin"><div class="nbrand"><img class="bw" src="${LG_FULLW}" alt="Einmorf Entertainment"><img class="bm" src="${LG_MARKW}" alt="Einmorf"></div>${b("home","home","Beranda")}${b("inv","inv","Invoice")}<span class="nsp"></span>${b("cal","cal","Kalender")}${b("inc","inc","Pendapatan")}${b("set","gear","Pengaturan","nset")}<button class="fab" data-act="newinv" aria-label="Invoice baru">${LOGO(34)}<span class="fl">Invoice baru</span></button></div>`}
 const topBar=(right="")=>`<div class="top"><button class="pb" data-act="back" aria-label="Kembali">${ico("chL",20)}</button><div class="flx">${right}</div></div>`;
@@ -1068,7 +1076,7 @@ function pkDraw(){const p=PK,y=$("#shp").scrollTop;openS(`<div class="grab"></di
 /* ================= PROFIL & PENGATURAN ================= */
 function vSet(){const s=S(),f=(l,k,t="text",ph="")=>`<label>${l}</label><input type="${t}" data-s="${k}" value="${esc(s[k])}" placeholder="${ph}">`,demo=db.invoices.some(i=>i.demo)||db.income.some(i=>i.demo)||db.events.some(e=>e.demo);
  return`<div class="ghd">${topBar(`<img src="${LG_FULL}" alt="Einmorf" style="height:34px">`)}<div class="ttl flx" style="gap:14px"><span class="ava" style="width:62px;height:62px;font-size:24px">${s.logo?`<img src="${s.logo}" alt="">`:`<img src="${LG_MARKW}" alt="Einmorf" style="background:none;padding:9px">`}</span><div style="min-width:0"><h1 style="font-size:22px"><b>${esc(s.company||"Profil usaha")}</b></h1><p style="margin:2px 0 0">${esc(s.mail)}</p></div></div></div>
- <div class="sp"></div><div class="setg"><div class="fc"><h2>Penyimpanan</h2><div style="margin:8px 0 4px">${stChip()}</div>${conn.mode==="gdrive"?`<p class="hint">Data tersimpan di Google Drive: <b>${GFOLDER}/${GNAME}</b>. Buka Einmorf di HP, tablet, atau PC lalu login dengan akun Google yang sama, datanya otomatis sama.</p><div class="flx" style="flex-wrap:wrap;margin-top:10px"><button class="btn sm pr" data-act="gsync">${ico("sync",15)} Sinkron sekarang</button>${ok()?"":`<button class="btn sm" data-act="gconn">Sambungkan</button>`}<button class="btn sm" data-act="gsetup">Client ID</button><button class="btn sm" data-act="gout">Putuskan</button></div>`:`<p class="hint">${!canFS()?"Di perangkat ini file tidak bisa disambung langsung. Buat/buka file akan memakai penyimpanan perangkat + salinan file. ":""}${conn.mode==="file"&&ok()?`Setiap perubahan otomatis disimpan ke <b>${esc(conn.name)}</b>. Taruh file di folder Google Drive for desktop supaya ikut ter-backup.`:conn.mode==="device"&&ok()?"Data tersimpan di HP ini. Ekspor cadangan secara berkala untuk berjaga-jaga.":"Belum terhubung. Perubahan saat ini tidak akan tersimpan."}</p>
+ <div class="sp"></div><div class="setg">${upCard()}${nCard()}<div class="fc"><h2>Penyimpanan</h2><div style="margin:8px 0 4px">${stChip()}</div>${conn.mode==="gdrive"?`<p class="hint">Data tersimpan di Google Drive: <b>${GFOLDER}/${GNAME}</b>. Buka Einmorf di HP, tablet, atau PC lalu login dengan akun Google yang sama, datanya otomatis sama.</p><div class="flx" style="flex-wrap:wrap;margin-top:10px"><button class="btn sm pr" data-act="gsync">${ico("sync",15)} Sinkron sekarang</button>${ok()?"":`<button class="btn sm" data-act="gconn">Sambungkan</button>`}<button class="btn sm" data-act="gsetup">Client ID</button><button class="btn sm" data-act="gout">Putuskan</button></div>`:`<p class="hint">${!canFS()?"Di perangkat ini file tidak bisa disambung langsung. Buat/buka file akan memakai penyimpanan perangkat + salinan file. ":""}${conn.mode==="file"&&ok()?`Setiap perubahan otomatis disimpan ke <b>${esc(conn.name)}</b>. Taruh file di folder Google Drive for desktop supaya ikut ter-backup.`:conn.mode==="device"&&ok()?"Data tersimpan di HP ini. Ekspor cadangan secara berkala untuk berjaga-jaga.":"Belum terhubung. Perubahan saat ini tidak akan tersimpan."}</p>
   <div class="flx" style="flex-wrap:wrap;margin-top:10px">${true?`<button class="btn sm" data-act="pnew">${ico("file",15)} File baru</button><button class="btn sm" data-act="popen">${ico("ul",15)} Buka file</button>`:""}${KD?"":`<button class="btn sm" data-act="pdev">${ico("phone",15)} Simpan di HP</button>`}${conn.stat==="need"?`<button class="btn sm pr" data-act="reconn">Sambungkan</button>`:""}</div>${KD?"":`<div class="hr"></div><button class="btn pr wide" data-act="gconn">${ico("cloud",17)} Sinkron lewat Google Drive</button><p class="hint" style="margin-top:6px">Satu data untuk HP, tablet, dan PC.</p>`}`}</div>
  <div class="fc"><h2>Identitas di invoice</h2>${f("Nama usaha","company")}<label>Alamat</label><textarea data-s="addr">${esc(s.addr)}</textarea><div class="r2"><div>${f("Telepon","tel","tel")}</div><div>${f("Email","mail","email")}</div></div><div class="r2"><div>${f("Sales (default)","sales")}</div><div>${f("Kota tanda tangan","city")}</div></div>${f("Nama panggilanmu (sapaan beranda)","name","text","Nama panggilan")}
   <label>Logo</label><div class="upl"><span class="pv">${`<img src="${s.logo||LG_FULL}" alt="">`}</span><button class="btn sm" data-act="upimg" data-k="logo">${ico("ul",15)} Unggah</button>${s.logo?`<button class="btn sm del" data-act="rmimg" data-k="logo">Pakai logo Einmorf</button>`:""}</div>
@@ -1159,7 +1167,7 @@ function ask(msg,o={}){return new Promise(res=>{const del=/^Hapus/.test(msg),inp
 const say=(msg,title)=>ask(msg,{title:title||"Info",ok:"Mengerti",cancel:""});
 
 /* ================= sheet & toast ================= */
-function openS(h){$("#shp").innerHTML=h.startsWith('<div class="grab">')?h:`<div class="grab"></div>`+h;$("#sh").classList.add("op");fitA4()}
+function openS(h){$("#shp").innerHTML=h.startsWith('<div class="grab">')?h:`<div class="grab"></div>`+h;$("#sh").classList.add("op");fitA4();guard()}
 function closeS(){$("#sh").classList.remove("op")}
 let tt;function toast(m){const e=$("#toast");e.textContent=m;e.classList.add("on");clearTimeout(tt);tt=setTimeout(()=>e.classList.remove("on"),2000)}
 function imgToData(file,max=700){return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>{const im2=new Image();im2.onload=()=>{const k=Math.min(1,max/Math.max(im2.width,im2.height)),c=document.createElement("canvas");c.width=Math.round(im2.width*k);c.height=Math.round(im2.height*k);c.getContext("2d").drawImage(im2,0,0,c.width,c.height);res(c.toDataURL("image/png"))};im2.onerror=rej;im2.src=r.result};r.onerror=rej;r.readAsDataURL(file)})}
@@ -1171,6 +1179,11 @@ document.addEventListener("click",async e=>{if(e.target.closest("#dlg"))return;
  const a=e.target.closest("[data-act]");if(!a)return;const d=a.dataset,act=d.act,inv=()=>db.invoices.find(i=>i.id===d.id);
  switch(act){
  case"back":back();break;
+ case"non":nEnable();break;
+ case"noff":lsSet("einmorf_notif","");nTm.forEach(clearTimeout);render();break;
+ case"ntest":notifyToday(true);break;
+ case"upnow":upReload();break;
+ case"upchk":upCheck(true);break;
  case"close":closeS();break;
  case"stg":if(view!=="set")go("set");break;
  case"relock":lockIgn=false;lockCheck();render();break;
@@ -1301,8 +1314,75 @@ $("#imp").onchange=e=>{const f=e.target.files[0];if(!f)return;f.text().then(asyn
 $("#imgin").onchange=async e=>{const f=e.target.files[0];if(!f)return;if(IMGK==="__sig"){try{SG.tmp=await sigFromImage(f);SG.mode="up";sgDraw()}catch(x){say("Gambar tidak bisa dibaca.")}e.target.value="";return}try{S()[IMGK]=await imgToData(f);save();render();toast("Gambar disimpan")}catch(x){say("Gambar tidak bisa dibaca.")}e.target.value=""};
 setInterval(()=>{const n=iso(new Date());if(n!==TD){TD=n;render()}},60000);
 if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>fitA4());
-render(true);boot();
-if("serviceWorker" in navigator&&/^https?:/.test(location.protocol)&&!KD)navigator.serviceWorker.register("sw.js").catch(()=>{});
+
+/* ================= HP: tombol back, geser antar tab, lanjut di posisi terakhir ================= */
+const isMob=()=>matchMedia("(max-width:759px)").matches,TABS=["home","inv","cal","inc"],UIK="einmorf_ui",VIEWS=["home","inv","inc","cal","set"];
+let guarded=false;
+const shOpen=()=>$("#sh").classList.contains("op"),dlgOpen=()=>$("#dlg").classList.contains("on"),lkOpen=()=>$("#lk").classList.contains("on");
+const atRoot=()=>view==="home"&&!shOpen()&&!dlgOpen();
+function guard(force){if(!guarded&&(force||!atRoot())){try{history.pushState({g:1},"")}catch(e){}guarded=true}}
+window.addEventListener("popstate",async()=>{guarded=false;
+ if(lkOpen()){guard(true);return}
+ if(dlgOpen()){$("#dlg").click()}
+ else if(shOpen())closeS();
+ else if(view==="new"&&ed){guard(true);if(await ask("Isian invoice yang belum disimpan akan hilang.",{title:"Tutup form invoice?",ok:"Tutup",cancel:"Lanjut mengisi"}))back();return}
+ else if(view!=="home")back();
+ setTimeout(()=>guard(),0)});
+function uiSave(){try{lsSet(UIK,JSON.stringify({v:VIEWS.includes(view)?view:"home",cv,cd,t:Date.now()}))}catch(e){}}
+document.addEventListener("visibilitychange",()=>{if(document.hidden)uiSave()});
+function pgAnim(dir){const m=$("#scr");if(!m)return;m.classList.remove("pg-l","pg-r");void m.offsetWidth;m.classList.add(dir>0?"pg-l":"pg-r");setTimeout(()=>m.classList.remove("pg-l","pg-r"),320)}
+function hScroll(el){for(let x=el;x&&x!==document.body;x=x.parentElement){if(/^(INPUT|TEXTAREA|SELECT)$/.test(x.tagName))return"input";if(x.scrollWidth>x.clientWidth+4){const o=getComputedStyle(x).overflowX;if(o==="auto"||o==="scroll")return x}}return null}
+(()=>{let sx=0,sy=0,st=0,on=false,sc=null;
+ document.addEventListener("touchstart",e=>{on=false;if(!isMob()||lkOpen()||shOpen()||dlgOpen()||e.touches.length>1||!TABS.includes(view))return;const t=e.target;if(t.closest("#bn"))return;
+  sc=hScroll(t);if(sc==="input")return;on=true;sx=e.touches[0].clientX;sy=e.touches[0].clientY;st=Date.now()},{passive:true});
+ document.addEventListener("touchend",e=>{if(!on)return;on=false;const dx=e.changedTouches[0].clientX-sx,dy=e.changedTouches[0].clientY-sy;
+  if(Math.abs(dx)<70||Math.abs(dx)<Math.abs(dy)*1.5||Date.now()-st>800)return;
+  if(sc&&(dx>0?sc.scrollLeft>2:sc.scrollLeft+sc.clientWidth<sc.scrollWidth-2))return;
+  const i=TABS.indexOf(view),j=i+(dx<0?1:-1);if(j<0||j>=TABS.length)return;go(TABS[j]);pgAnim(dx<0?1:-1)},{passive:true})})();
+
+/* ================= Notifikasi agenda ================= */
+const NOK=()=>"Notification" in window&&"serviceWorker" in navigator&&/^https?:/.test(location.protocol)&&!KD;
+const nOn=()=>NOK()&&Notification.permission==="granted"&&lsGet("einmorf_notif")==="1";
+const hm=t=>(t||"").replace(":",".");
+const agLine=e=>(e.allDay||!e.s?"":hm(e.s)+(e.e?"–"+hm(e.e):"")+" · ")+e.title;
+async function swReg(){try{return await navigator.serviceWorker.ready}catch(e){return null}}
+async function agCache(){if(!NOK())return;try{const days={};for(let i=0;i<21;i++){const d=add(i,TD);days[d]=evRange(d,d).map(agLine)}
+ const c=await caches.open("einmorf-agenda");await c.put("agenda.json",new Response(JSON.stringify({days,at:Date.now()}),{headers:{"Content-Type":"application/json"}}))}catch(e){}}
+async function agShown(set){try{const c=await caches.open("einmorf-agenda");if(set){await c.put("shown.json",new Response(JSON.stringify({d:set})));return set}const r=await c.match("shown.json");return r?(await r.json()).d:""}catch(e){return""}}
+async function notifyToday(force){if(!nOn()||!ok())return;const L=evRange(TD,TD);await agCache();
+ if(!force&&(await agShown())===TD)return;if(!L.length&&!force)return;const r=await swReg();if(!r)return;
+ r.showNotification(L.length?`Agenda hari ini (${L.length})`:"Tidak ada agenda hari ini",{body:L.length?L.slice(0,6).map(agLine).join("\n")+(L.length>6?`\n+${L.length-6} lainnya`:""):"Hari ini kosong.",tag:"em-today",icon:"icon-192.png",badge:"icon-192.png",data:{v:"cal"}});
+ await agShown(TD);nSchedule()}
+let nTm=[];
+function nSchedule(){nTm.forEach(clearTimeout);nTm=[];if(!nOn())return;const now=Date.now();
+ evRange(TD,TD).filter(e=>!e.allDay&&e.s).forEach(e=>{const at=new Date(TD+"T"+e.s+":00").getTime()-15*60e3,k=TD+e.key;if(!(at>now)||(lsGet("einmorf_nf")||"").includes(k))return;
+  nTm.push(setTimeout(async()=>{const r=await swReg();if(!r)return;r.showNotification("15 menit lagi: "+e.title,{body:hm(e.s)+(e.e?"–"+hm(e.e):"")+(e.note?" · "+e.note:""),tag:"em-"+e.key,icon:"icon-192.png",data:{v:"cal"}});
+   lsSet("einmorf_nf",((lsGet("einmorf_nf")||"").split("|").filter(x=>x.startsWith(TD)).concat(k)).join("|"))},at-now))})}
+async function nEnable(){if(!NOK()){say("Notifikasi hanya bisa di versi web yang dipasang di HP / browser.","Notifikasi");return}
+ const p=await Notification.requestPermission();if(p!=="granted"){say("Izin notifikasi ditolak. Aktifkan lewat pengaturan situs / aplikasi kalau berubah pikiran.","Notifikasi");render();return}
+ lsSet("einmorf_notif","1");const r=await swReg();try{if(r&&r.periodicSync){const st=await navigator.permissions.query({name:"periodic-background-sync"});if(st.state==="granted")await r.periodicSync.register("em-agenda",{minInterval:6*3600e3})}}catch(e){}
+ render();notifyToday(true)}
+document.addEventListener("visibilitychange",()=>{if(!document.hidden)setTimeout(()=>notifyToday(false),1500)});
+navigator.serviceWorker&&navigator.serviceWorker.addEventListener&&navigator.serviceWorker.addEventListener("message",e=>{if(e.data&&e.data.go)go(e.data.go)});
+function nCard(){if(KD)return"";const on=nOn(),den=NOK()&&Notification.permission==="denied";
+ return`<div class="fc"><h2>Notifikasi agenda</h2><p class="hint">${on?"Aktif. Tiap hari saat Einmorf dibuka kamu dapat ringkasan agenda hari ini (acara, jatuh tempo, agenda pribadi), plus pengingat 15 menit sebelum acara berjam.":den?"Izin notifikasi diblokir. Buka pengaturan situs / aplikasi untuk mengizinkan.":"Tampilkan ringkasan agenda hari ini dan pengingat 15 menit sebelum acara di HP-mu."}</p><div class="flx" style="flex-wrap:wrap;margin-top:10px">${on?`<button class="btn sm pr" data-act="ntest">Kirim ringkasan sekarang</button><button class="btn sm" data-act="noff">Matikan</button>`:`<button class="btn sm pr" data-act="non">Aktifkan notifikasi</button>`}</div></div>`}
+
+/* ================= Pembaruan otomatis ================= */
+const APPV="1.1.0";let upReady=false;
+function upReload(){uiSave();try{if(conn.mode==="gdrive"){gCache();if(gPend)gFlush()}else if(pend)wr()}catch(e){}setTimeout(()=>location.reload(),400)}
+function upToast(){if($("#upt"))return;const d=document.createElement("div");d.id="upt";d.innerHTML=`<span>Versi baru Einmorf siap.</span><button class="btn sm pr" data-act="upnow">Muat sekarang</button>`;document.body.appendChild(d)}
+async function upCheck(manual){try{const r=await navigator.serviceWorker.getRegistration();if(r){await r.update();if(manual)setTimeout(()=>{if(!upReady)say("Einmorf sudah versi terbaru ("+APPV+").","Pembaruan")},2500)}}catch(e){if(manual)say("Tidak bisa cek pembaruan. Periksa internet.","Pembaruan")}}
+function upCard(){if(KD)return"";return`<div class="fc"><h2>Versi aplikasi</h2><p class="hint">Einmorf <b>${APPV}</b>. Pembaruan dipasang otomatis saat aplikasi dibuka atau dibuka lagi dari latar belakang. Kalau sedang mengisi invoice, muncul tombol <b>Muat sekarang</b> dulu supaya isianmu tidak hilang.</p><div class="flx" style="flex-wrap:wrap;margin-top:10px"><button class="btn sm" data-act="upchk">Cek pembaruan</button></div></div>`}
+window._ld=Date.now();
+{const u=(()=>{try{return JSON.parse(lsGet(UIK))}catch(e){return null}})();if(u&&Date.now()-u.t<12*3600e3){if(VIEWS.includes(u.v))view=u.v;if(u.cv)cv=u.cv;if(u.cd&&/^\d{4}-\d\d-\d\d$/.test(u.cd))cd=u.cd}}
+render(true);boot().then(()=>setTimeout(()=>notifyToday(false),2500));
+if("serviceWorker" in navigator&&/^https?:/.test(location.protocol)&&!KD){const had=!!navigator.serviceWorker.controller;
+ navigator.serviceWorker.register("sw.js").catch(()=>{});
+ navigator.serviceWorker.addEventListener("controllerchange",()=>{if(!had||upReady)return;upReady=true;
+  const busy=view==="new"||shOpen()||dlgOpen()||lkOpen()||document.activeElement&&/^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName);
+  if(!busy&&(document.hidden||Date.now()-(window._ld||0)<15000))upReload();else upToast()});
+ document.addEventListener("visibilitychange",()=>{if(document.hidden){if(upReady&&view!=="new")upReload()}else upCheck(false)});
+ setInterval(()=>upCheck(false),30*60e3)}
 </script>
 </body>
 </html>
