@@ -615,8 +615,20 @@ const gcid=()=>GOOGLE_CLIENT_ID||lsGet("einmorf_gcid")||"";
 const jget=k=>{try{return JSON.parse(lsGet(k))}catch(e){return null}};
 let gtok=jget("einmorf_gtok"),gfile=jget("einmorf_gfile"),gisP=null,gBusy=false,gPend=false,gTimer=null;
 const gOK=()=>!!(gtok&&gtok.exp>Date.now()+60000);
+/* Login Google: di HP / aplikasi terpasang pakai pindah halaman (redirect) supaya hasil login kembali ke aplikasi; di komputer pakai pop-up */
+const gRedir=()=>{try{return matchMedia("(display-mode: standalone)").matches||!!navigator.standalone||/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)}catch(e){return false}};
+const gRU=()=>location.origin+location.pathname.replace(/index\.html$/,"");
+function gAuth(prompt){if(!gRedir()||KD)return gAuthPop(prompt);
+ const st=Math.random().toString(36).slice(2)+Date.now().toString(36);lsSet("einmorf_oast",st);
+ const q={client_id:gcid(),redirect_uri:gRU(),response_type:"token",scope:GSCOPE,include_granted_scopes:"true",state:st};if(prompt)q.prompt=prompt;
+ location.href="https://accounts.google.com/o/oauth2/v2/auth?"+new URLSearchParams(q);return new Promise(()=>{})}
+let gBack="";(()=>{const h=location.hash;if(!/access_token=|error=/.test(h))return;const q=new URLSearchParams(h.slice(1)),st=lsGet("einmorf_oast");
+ try{history.replaceState(history.state,"",location.pathname+location.search)}catch(e){}
+ if(!st||q.get("state")!==st)return;lsSet("einmorf_oast","");
+ if(q.get("access_token")){gtok={t:q.get("access_token"),exp:Date.now()+(+q.get("expires_in")||3600)*1000};lsSet("einmorf_gtok",JSON.stringify(gtok));lsSet("einmorf_gok","1");gBack="ok"}
+ else gBack="err:"+(q.get("error")||"")})();
 function loadGIS(){if(window.google&&google.accounts&&google.accounts.oauth2)return Promise.resolve();return gisP||(gisP=new Promise((res,rej)=>{const sc=document.createElement("script");sc.src="https://accounts.google.com/gsi/client";sc.async=true;sc.onload=()=>res();sc.onerror=()=>{gisP=null;rej(new Error("Layanan login Google tidak bisa dimuat. Periksa koneksi internet."))};document.head.appendChild(sc)}))}
-function gAuth(prompt){return new Promise((res,rej)=>{
+function gAuthPop(prompt){return new Promise((res,rej)=>{
  const go2=()=>{try{const tc=google.accounts.oauth2.initTokenClient({client_id:gcid(),scope:GSCOPE,
   callback:r=>{if(r.error)return rej(new Error(r.error_description||r.error));gtok={t:r.access_token,exp:Date.now()+(+r.expires_in||3600)*1000};lsSet("einmorf_gtok",JSON.stringify(gtok));lsSet("einmorf_gok","1");res()},
   error_callback:e=>rej(new Error(e&&e.type==="popup_closed"?"Jendela login Google ditutup.":e&&e.type==="popup_failed_to_open"?"Jendela login Google diblokir browser. Izinkan pop-up untuk situs ini lalu coba lagi.":(e&&e.message)||"Login Google gagal."))});
@@ -675,7 +687,8 @@ async function boot(){
    else if(p.mode==="device"){if(lsOK()){const t=lsGet(LSK);if(t)db=norm(JSON.parse(t));conn={mode:"device",stat:"ok",name:"HP ini"};persist()}else conn={mode:"device",stat:"err",name:"HP ini"}}}
  }catch(e){if(conn.mode==="file")conn.stat="need"}
  if(gcid())loadGIS().catch(()=>{});
- render(true);lockCheck()}
+ render(true);lockCheck();
+ if(gBack){const a=gBack;gBack="";if(a==="ok"){if(!ok())gConnect()}else if(a!=="err:access_denied")say("Login Google gagal ("+a.slice(4)+"). Coba lagi.","Google Drive")}}
 function persist(){try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(e){}}
 async function loadFile(){const f=await fh.getFile(),t=await f.text();db=norm(JSON.parse(t||"{}"));lastW=f.lastModified||0;dirty=false}
 async function writeNow(){pend=true;await wr()}
