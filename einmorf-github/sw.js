@@ -1,6 +1,6 @@
 // Einmorf Dashboard: simpan tampilan aplikasi supaya tetap bisa dibuka saat sinyal jelek.
 // Data tidak disimpan di sini (data ada di Google Drive / perangkat).
-const C="einmorf-v10",AG="einmorf-agenda";
+const C="einmorf-v11",AG="einmorf-agenda";
 self.addEventListener("install",e=>{e.waitUntil(caches.open(C).then(c=>c.addAll(["./","index.html","manifest.webmanifest","icon-192.png","icon-512.png"])).then(()=>self.skipWaiting()))});
 self.addEventListener("activate",e=>{e.waitUntil(caches.keys().then(k=>Promise.all(k.filter(x=>x!==C&&x!==AG).map(x=>caches.delete(x)))).then(()=>self.clients.claim()))});
 self.addEventListener("fetch",e=>{const u=new URL(e.request.url);
