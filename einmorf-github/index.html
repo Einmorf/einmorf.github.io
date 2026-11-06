@@ -231,6 +231,7 @@ textarea{resize:vertical;min-height:70px}
 .segm{display:flex;background:var(--c2);border-radius:99px;padding:4px;margin-top:10px}
 .segm button{flex:1;padding:9px 0;border-radius:99px;font-weight:700;font-size:13px;color:var(--mu)}
 .segm button.on{background:var(--tx);color:#121213}
+.tcw{margin-top:16px;padding:14px;border-radius:18px;background:var(--c2)}.tcw>b{display:block;font-size:14px;margin-bottom:2px}.tcw input{background-color:var(--bg)}.tcc{display:flex;gap:8px;align-items:center;margin:10px 0;font-size:13px;color:var(--mu);font-weight:600}.tcc input{-webkit-appearance:checkbox;appearance:auto;width:18px;height:18px;min-height:0;padding:0;margin:0;flex:none;accent-color:#e9e5f5}
 .ln{background:var(--c2);border-radius:18px;padding:10px 12px 12px;margin-top:10px;position:relative}
 .ln input,.ln select,.ln textarea{background-color:var(--bg)}
 .ln .x{position:absolute;top:10px;right:10px;width:28px;height:28px;border-radius:50%;background:var(--c3);display:grid;place-items:center}
@@ -590,6 +591,9 @@ const EVC=["#c9c8f5","#bcd9f5","#eef0b0","#bfe3c4","#f2c6dc","#f6d6bd"];
 const NOTES0=["Biaya di atas untuk durasi acara maksimal 3 jam dari kesepakatan acara di awal. Kelebihan waktu dihitung sebagai overtime.","Talent standby maksimal 2 jam sebelum acara.","Untuk penambahan jasa atau barang di luar spesifikasi di atas dikenakan tambahan biaya.","DP 50% setelah menerima invoice, pelunasan pada hari H.","Harga belum termasuk konsumsi per talent dan crew.","Dana yang telah masuk tidak dapat dikembalikan dengan alasan apapun."];
 const SB={t:"Standby",d:"Talent standby maksimal 2 jam sebelum acara dimulai."},KS={t:"Konsumsi",d:"Fee belum termasuk konsumsi talent."},DUR={t:"Durasi",d:"Maksimal 3 jam sesuai kesepakatan awal. Kelebihan 1 jam dihitung overtime."};
 const PLAYER=[SB,DUR,KS],RQ={t:"Request lagu",d:"Daftar lagu request dikirim paling lambat H-3 sebelum acara."};
+const CATX=()=>[{id:"drum",name:"Drummer",icon:"pad",color:PAL[6%PAL.length],unit:"1 ORANG",fee:0,notes:PLAYER},
+ {id:"dj",name:"DJ",icon:"speaker",color:PAL[2%PAL.length],unit:"1 ORANG",fee:0,notes:[SB,DUR]},
+ {id:"crew",name:"Crew",icon:"crew",color:PAL[4%PAL.length],unit:"1 ORANG",fee:0,notes:[KS]}].map(c=>({...c,notes:c.notes.map(n=>({...n}))}));
 const CAT0=()=>[
  {id:"mc",name:"MC",icon:"mic",color:PAL[0],unit:"1 ORANG",fee:0,notes:[DUR,{t:"Kehadiran",d:"MC hadir maksimal 3 jam sebelum acara. Lebih dari itu atau ada GR H-1 dikenakan biaya tambahan."},{t:"Technical Meeting",d:"TM dengan MC dilakukan secara online."}]},
  {id:"fsinger",name:"Female Singer",icon:"note",color:PAL[1],unit:"1 ORANG",fee:0,notes:[SB,DUR,RQ]},
@@ -600,7 +604,8 @@ const CAT0=()=>[
  {id:"drumpad",name:"Drumpad Player",icon:"pad",color:PAL[6],unit:"1 ORANG",fee:0,notes:PLAYER},
  {id:"sound",name:"Soundsystem",icon:"speaker",color:PAL[7],unit:"3000 WATT",fee:0,notes:[{t:"Kapasitas",d:"Standar 3000 watt."},{t:"Tambahan alat",d:"Penambahan alat di luar spesifikasi dikenakan biaya tambahan."},{t:"Loading",d:"Loading alat dilakukan sebelum talent standby."}]},
  {id:"sax",name:"Saxophone Player",icon:"sax",color:PAL[8],unit:"1 ORANG",fee:0,notes:PLAYER},
- {id:"violin",name:"Violinist",icon:"violin",color:PAL[9],unit:"1 ORANG",fee:0,notes:PLAYER}].map(c=>({...c,notes:c.notes.map(n=>({...n}))}));
+ {id:"violin",name:"Violinist",icon:"violin",color:PAL[9],unit:"1 ORANG",fee:0,notes:PLAYER},
+ ...CATX()].map(c=>({...c,notes:c.notes.map(n=>({...n}))}));
 const defaults=()=>({app:"einmorf",v:2,settings:{name:"",company:"",addr:"",tel:"",mail:"",sales:"Administration",city:"",signer:"",logo:"",sign:"",gross:2,tpl:"classic",defSigner:"",signers:[],bankName:"",bankNo:"",bankHolder:"",notes:[...NOTES0]},
  cats:CAT0(),packages:[{id:"pk1",name:"Paket Gala Dinner",fee:0,lines:[{cat:"mc",name:"MC",qty:"1 ORANG"},{cat:"fsinger",name:"Singer",qty:"1 ORANG"},{cat:"keys",name:"Keyboard",qty:"1 ORANG"},{cat:"sound",name:"Soundsystem",qty:"3000 WATT"},{cat:"",name:"Crew",qty:"5 ORANG"}]},{id:"pk2",name:"Paket Akustik",fee:0,lines:[{cat:"fsinger",name:"Female Singer",qty:"1 ORANG"},{cat:"guitar",name:"Guitar",qty:"1 ORANG"},{cat:"sound",name:"Soundsystem",qty:"1500 WATT"}]}],
  invoices:[],income:[],events:[]});
@@ -609,7 +614,8 @@ function seed(){const d=defaults();
  return d}
 const norm=j=>{const d=defaults();const o={...d,...j,settings:{...d.settings,...(j.settings||{})}};
  const st=o.settings;if(!j.settings||!Array.isArray(j.settings.signers)){const nm0=j.settings&&j.settings.signer;st.signers=nm0?[{id:"s1",name:nm0,role:"",mode:j.settings.sign?"img":"type",img:j.settings.sign||""}]:[];st.defSigner=nm0?"s1":""}st.signers=(st.signers||[]).filter(g=>!(g.mode==="type"&&/^rica januarita$/i.test(String(g.name||"").trim())));if(!st.signers.some(g=>g.id===st.defSigner))st.defSigner=(st.signers[0]||{}).id||"";
- ["cats","packages","invoices","income","events"].forEach(k=>{if(!Array.isArray(o[k]))o[k]=d[k]});o.invoices.forEach(i=>{i.lines=i.lines||[];i.notes=i.notes||[]});return o};
+ ["cats","packages","invoices","income","events"].forEach(k=>{if(!Array.isArray(o[k]))o[k]=d[k]});o.invoices.forEach(i=>{i.lines=i.lines||[];i.notes=i.notes||[]});
+ if(!(o.catV>=2)){CATX().forEach(c=>{if(!o.cats.some(x=>x.id===c.id||String(x.name).trim().toLowerCase()===c.name.toLowerCase()))o.cats.push(c)});o.catV=2}return o};
 let db=seed();
 const S=()=>db.settings;
 
@@ -949,6 +955,8 @@ const sigHtml=g=>g.mode==="none"?"":g.mode==="img"&&g.img?`<img src="${g.img}" a
 const VP1="M38,122 Q38,98 62,98 L316,98 Q330,98 338,108 L388,158 Q398,168 412,168 L732,168 Q756,168 756,192 L756,1059 Q756,1083 732,1083 L62,1083 Q38,1083 38,1059 Z",VP2="M38,84 Q38,60 62,60 L732,60 Q756,60 756,84 L756,1059 Q756,1083 732,1083 L62,1083 Q38,1083 38,1059 Z";
 function decor(t,pi,s){if(t==="villa")return`<svg class="vbg" viewBox="0 0 794 1123" preserveAspectRatio="none"><rect width="794" height="${pi?200:270}" fill="#1d1416"/><path d="${pi?VP2:VP1}" fill="#efe7da"/></svg>${pi?"":`<div class="vbr"><img src="${s.logo||LG_FULLW}" alt="" style="${s.logo?"background:#efe7da;border-radius:8px;padding:4px":""}"><small>${esc(s.company)}</small></div>`}`;
  if(t==="modern")return`<i class="m-strip"></i><i class="m-blob"></i>`;if(t==="dark")return`<i class="d-b1"></i><i class="d-b2"></i>`;return""}
+function autoDesc(o){const N=[];(o.lines||[]).forEach(l=>{const n=String(l.name||"").trim();if(n&&!N.some(x=>x.toLowerCase()===n.toLowerCase()))N.push(n)});
+ const who=N.length>1?N.slice(0,-1).join(", ")+" & "+N[N.length-1]:N[0]||"";return who?who+(o.evName?" untuk acara "+o.evName:""):(o.evName?"Untuk acara "+o.evName:"")}
 function pBlocks(o){const s=S(),t=tplOf(o),T=TPL[t],c=calc(o),B=[],lg=s.logo||LG_FULL,lgw=s.logo||LG_FULLW;
  const contact=[s.tel&&"Telp: "+esc(s.tel),s.mail&&"Email: "+esc(s.mail)].filter(Boolean).join(", ");
  const co=`<b>${esc(s.company)}</b><div>${esc(s.addr)}</div><div class="u">${contact}</div>`;
@@ -960,7 +968,7 @@ function pBlocks(o){const s=S(),t=tplOf(o),T=TPL[t],c=calc(o),B=[],lg=s.logo||LG
  B.push({k:"meta",h:t==="villa"?`<div class="v-meta"><div><h4>NOTA PEMBAYARAN</h4>Nota Nomor ${esc(o.no)}<br>Tanggal ${fdl(o.dIn)}<br>Sales: ${esc(o.sales||s.sales)}</div><div><h4>BILL TO</h4>${esc(o.client)||"-"}${o.evName?`<br>Acara: <b>${esc(o.evName)}</b>`:""}</div></div>`
   :t==="classic"?`<div class="p-meta"><div class="p-bill"><span>Bill To</span><span>:</span><b>${esc(o.client)||"-"}</b>${o.evName?`<span>Event</span><span>:</span><b>${esc(o.evName)}</b>`:""}</div><div class="p-kv"><span>Sales</span><span>:</span><span>${esc(o.sales||s.sales)}</span><span>No. Invoice</span><span>:</span><span>${esc(o.no)}</span><span>Date</span><span>:</span><span>${dateEN(o.dIn)}</span></div></div>`
   :`<div class="g-meta"><div><small>BILL TO</small><b>${esc(o.client)||"-"}</b>${o.evName?`<small style="margin-top:10px">EVENT</small><b>${esc(o.evName)}</b>`:""}</div><div class="g-kv"><span>No. Invoice</span><b style="font-size:1em">${esc(o.no)}</b><span>Date</span><span style="opacity:1">${dateEN(o.dIn)}</span><span>Sales</span><span style="opacity:1">${esc(o.sales||s.sales)}</span></div></div>`});
- const desc=o.title||(o.evName?"Paket entertainment untuk acara "+o.evName:""),ev=evLine(o);
+ const desc=String(o.title||"").trim()||autoDesc(o),ev=evLine(o);
  if(desc||ev)B.push({k:"desc",h:`<div class="p-desc">${desc?esc(desc)+"<br>":""}${ev?`<b>${esc(ev)}</b>`:""}</div>`});
  B.push({k:"th",h:`<div class="p-tr p-th"><span>No</span><span>TALENT</span><span>JUMLAH</span><span>TOTAL FEE</span></div>`});
  (c.lines.length?c.lines:[{name:"-",qty:"",show:0}]).forEach((l,i)=>B.push({k:"row",h:`<div class="p-tr"><span class="c">${i+1}</span><span>${esc(String(l.name||"").toUpperCase())}</span><span class="c">${esc(String(l.qty||"").toUpperCase())}</span><span class="r">${o.mode==="paket"||!l.show?"":rp2(l.show)}</span></div>`}));
@@ -999,14 +1007,14 @@ function vNew(){const f=(l,k,t="text",ph="")=>t==="money"?`<label>${l}</label><i
  return`${topBar(`<button class="pb fx" data-act="prev">${ico("eye",17)} Pratinjau A4</button>`)}
  <div class="ttl"><h1>${edId?"Edit":"Buat"} <b>Invoice</b></h1><p>Isi data acara dan talent. Hasilnya otomatis disusun di kertas A4.</p></div>
  <div class="edw"><div class="edf"><div class="fc"><h2>Klien & nomor</h2>${f("Bill To (nama klien / perusahaan)","client","text","mis. PT. Nama Klien")}<div class="r2"><div>${f("No. invoice","no")}</div><div>${f("Tanggal invoice","dIn","date")}</div></div>${f("Sales","sales")}</div>
- <div class="fc"><h2>Acara</h2>${f("Nama acara","evName","text","mis. Gala Dinner")}<label>Keterangan di invoice</label><textarea data-f="title" placeholder="mis. Mc dan paket entertainment untuk acara GALA DINNER" style="min-height:56px">${esc(ed.title)}</textarea>
+ <div class="fc"><h2>Acara</h2>${f("Nama acara","evName","text","mis. Gala Dinner")}<label>Keterangan di invoice <span class="mu sm" style="font-weight:600">(boleh dikosongkan)</span></label><textarea data-f="title" placeholder="${esc(autoDesc(ed)?"Otomatis: "+autoDesc(ed):"Kosongkan = otomatis dari nama acara & talent")}" style="min-height:56px">${esc(ed.title)}</textarea>
   <div class="r2"><div>${f("Tanggal acara","evDate","date")}</div><div>${f("Lokasi","venue","text","mis. Hotel Pullman CP")}</div></div><div class="r2"><div>${f("Jam mulai","tStart","time")}</div><div>${f("Jam selesai","tEnd","time")}</div></div>
   <p class="hint" id="evl" style="margin-top:10px">${esc(evLine(ed))}</p></div>
- <div class="fc"><h2>Talent</h2><p class="hint">Paket = satu harga untuk semua talent. Satuan = tiap talent langsung ditulis total fee-nya (tanpa harga satuan).</p>
+ <div class="fc"><h2>Talent & crew</h2><p class="hint">Paket = satu harga untuk semua. Satuan = tiap baris langsung ditulis total fee-nya. Yang tidak ada di daftar (mis. Lighting, Crew tambahan) bisa diketik sendiri.</p>
   <div class="segm"><button class="${pk?"on":""}" data-act="emode" data-k="paket">Paket</button><button class="${pk?"":"on"}" data-act="emode" data-k="satuan">Satuan</button></div>
   ${pk?`<label>Pilih paket</label><select data-pk="1"><option value="">— Pilih paket / susun sendiri —</option>${db.packages.map(p=>`<option value="${p.id}" ${ed.pkgId===p.id?"selected":""}>${esc(p.name)} · ${rpk(p.fee)}</option>`).join("")}</select>`:""}
-  <div id="lns">${ed.lines.map(lineHtml).join("")||`<div class="empty" style="margin-top:10px">Belum ada talent. Tambahkan di bawah.</div>`}</div>
-  <div class="r2" style="margin-top:10px"><button class="btn sm" data-act="tpick">${ico("plus",16)} Talent</button><button class="btn sm" data-act="lcust">${ico("plus",16)} Baris bebas</button></div>
+  <div id="lns">${ed.lines.map(lineHtml).join("")||`<div class="empty" style="margin-top:10px">Belum ada talent atau crew. Tambahkan di bawah.</div>`}</div>
+  <div class="r2" style="margin-top:10px"><button class="btn sm" data-act="tpick">${ico("plus",16)} Pilih talent / crew</button><button class="btn sm" data-act="lcust">${ico("edit",16)} Ketik sendiri</button></div>
   ${pk?`${f("Fee paket (deal)","deal","money")}`:""}
   ${pk&&ed.lines.length?`<button class="btn ghost" data-act="savepk">${ico("box",16)} Simpan susunan ini sebagai paket</button>`:""}</div>
  <div class="fc"><h2>Total & gross up</h2><p class="hint">Gross up untuk catatanmu sendiri: total di invoice dinaikkan sekian persen tanpa tulisan PPN atau pajak.</p>
@@ -1022,16 +1030,19 @@ function vNew(){const f=(l,k,t="text",ph="")=>t==="money"?`<label>${l}</label><i
  <div style="height:90px"></div>
  <div class="sbar"><div class="tt"><small id="sbl">Total di invoice</small><b id="sbt">Rp 0</b></div><button class="btn" data-act="prev" aria-label="Pratinjau">${ico("eye",18)}</button><button class="btn pr" data-act="saveinv">Simpan</button></div>`}
 function lineHtml(l,i){const pk=ed.mode==="paket";return`<div class="ln"><button class="x" data-act="lrm" data-i="${i}" aria-label="Hapus">${ico("x",14)}</button>
- <div class="lh">${tI(l.cat,18)}<select data-ln="${i}" data-k="cat"><option value="">Lainnya (bebas)</option>${db.cats.map(c=>`<option value="${c.id}" ${l.cat===c.id?"selected":""}>${esc(c.name)}</option>`).join("")}</select></div>
- <div class="lr ${pk?"one":""}"><div><label>Nama di invoice</label><input data-ln="${i}" data-k="name" value="${esc(l.name)}"></div><div><label>Jumlah</label><input data-ln="${i}" data-k="qty" value="${esc(l.qty)}" placeholder="1 ORANG"></div></div>
+ <div class="lh">${tI(l.cat,18)}<select data-ln="${i}" data-k="cat"><option value="">Lainnya (ketik sendiri)</option>${db.cats.map(c=>`<option value="${c.id}" ${l.cat===c.id?"selected":""}>${esc(c.name)}</option>`).join("")}</select></div>
+ <div class="lr ${pk?"one":""}"><div><label>${l.cat?"Nama di invoice":"Tulis nama talent / crew / item"}</label><input data-ln="${i}" data-k="name" value="${esc(l.name)}" placeholder="${l.cat?"":"mis. Lighting, Crew, Drummer"}" autocomplete="off"></div><div><label>Jumlah</label><input data-ln="${i}" data-k="qty" value="${esc(l.qty)}" placeholder="1 ORANG"></div></div>
  ${pk?"":`<label>Total fee</label><input class="mny" inputmode="numeric" data-ln="${i}" data-k="fee" value="${fm(l.fee)}" placeholder="Rp 0">`}</div>`}
 function notesHtml(){return ed.notes.map((n,i)=>`<div class="nt"><span>${i+1}.</span><textarea data-nt="${i}" rows="${Math.max(2,Math.ceil(String(n).length/34))}">${esc(n)}</textarea><button data-act="ntrm" data-i="${i}" aria-label="Hapus poin">${ico("x",13)}</button></div>`).join("")||`<p class="mu sm">Belum ada catatan.</p>`}
 let lpT=null;const wide=()=>matchMedia("(min-width:1100px)").matches;
 function livePrev(){clearTimeout(lpT);lpT=setTimeout(()=>{const v=$("#livepv");if(!v||!ed||!wide())return;const A=a4Html(ed);v.innerHTML=A.html;const n=$("#lpn");if(n)n.textContent=A.n+" halaman A4";fitA4()},250)}
 document.addEventListener("input",()=>{if(view==="new")livePrev()});document.addEventListener("change",()=>{if(view==="new")livePrev()});
-function edSum(){if(!ed)return;livePrev();const c=calc(ed),set=(id,v)=>{const e=$(id);if(e)e.textContent=v};set("#sDeal",rp(c.base));set("#sGu",`+ ${rp(c.gu)} (${+ed.gross||0}%)`);set("#sTot",rp(c.total));set("#sbt",rp(c.due));set("#sbl",+ed.dp?"Sisa setelah DP":"Total di invoice");const e=$("#evl");if(e)e.textContent=evLine(ed)}
+function edSum(){if(!ed)return;livePrev();const c=calc(ed),set=(id,v)=>{const e=$(id);if(e)e.textContent=v};set("#sDeal",rp(c.base));set("#sGu",`+ ${rp(c.gu)} (${+ed.gross||0}%)`);set("#sTot",rp(c.total));set("#sbt",rp(c.due));set("#sbl",+ed.dp?"Sisa setelah DP":"Total di invoice");const e=$("#evl");if(e)e.textContent=evLine(ed);const tt=$('[data-f="title"]');if(tt){const a=autoDesc(ed);tt.placeholder=a?"Otomatis: "+a:"Kosongkan = otomatis dari nama acara & talent"}}
 function rer(){const y=scrollY;render();scrollTo(0,y)}
-function tpick(){openS(`<div class="grab"></div><h2 style="font-size:20px">Tambah talent</h2><p class="mu sm" style="margin:4px 0 0">Ketuk untuk menambahkan. Bisa lebih dari satu.</p><div class="pick">${db.cats.map(c=>`<button data-act="tadd" data-id="${c.id}">${tI(c.id,20)}${esc(c.name)}</button>`).join("")}</div><div class="sp"></div><button class="btn pr wide" data-act="close">Selesai</button>`)}
+function tpick(){openS(`<div class="grab"></div><h2 style="font-size:20px">Tambah talent / crew</h2><p class="mu sm" style="margin:4px 0 0">Ketuk untuk menambahkan. Bisa lebih dari satu.</p><div class="pick">${db.cats.map(c=>`<button data-act="tadd" data-id="${c.id}">${tI(c.id,20)}${esc(c.name)}</button>`).join("")}</div>
+ <div class="tcw"><b>Tidak ada di daftar? Ketik sendiri</b><div class="r2"><div><label>Nama</label><input id="tcn" placeholder="mis. Lighting, Crew, Penari" autocomplete="off" enterkeyhint="done"></div><div><label>Jumlah</label><input id="tcq" placeholder="1 ORANG" autocomplete="off"></div></div>
+ <label class="tcc"><input type="checkbox" id="tcs"> Simpan juga ke daftar, supaya bisa dipilih lagi nanti</label><button class="btn wide" data-act="tcus">${ico("plus",16)} Tambahkan ke invoice</button></div>
+ <div class="sp"></div><button class="btn pr wide" data-act="close">Selesai</button>`)}
 
 /* ================= PENDAPATAN ================= */
 function vInc(){
@@ -1274,7 +1285,10 @@ document.addEventListener("click",async e=>{if(e.target.closest("#dlg"))return;
  case"emode":if(ed.mode!==d.k){if(d.k==="satuan")ed.lines.forEach(l=>{if(!+l.fee)l.fee=+catOf(l.cat)?.fee||0});else if(!+ed.deal)ed.deal=ed.lines.reduce((x,l)=>x+(+l.fee||0),0);ed.mode=d.k;rer()}break;
  case"tpick":tpick();break;
  case"tadd":{const c=catOf(d.id);ed.lines.push({id:uid(),cat:c.id,name:c.name,qty:c.unit||"1 ORANG",fee:ed.mode==="satuan"?+c.fee||0:0});rer();toast(c.name+" ditambahkan");break}
- case"lcust":ed.lines.push({id:uid(),cat:"",name:"",qty:"",fee:0});rer();break;
+ case"lcust":ed.lines.push({id:uid(),cat:"",name:"",qty:"1 ORANG",fee:0});rer();{const x=$(`[data-ln="${ed.lines.length-1}"][data-k="name"]`);if(x){x.scrollIntoView({block:"center"});x.focus()}}break;
+ case"tcus":{const v=($("#tcn")||{}).value||"";const n=v.trim();if(!n){toast("Ketik namanya dulu");$("#tcn")&&$("#tcn").focus();return}
+  const q=(($("#tcq")||{}).value||"").trim()||"1 ORANG";let cat="";if(($("#tcs")||{}).checked){const ex=db.cats.find(c=>c.name.trim().toLowerCase()===n.toLowerCase());if(ex)cat=ex.id;else{const c={id:"c"+uid(),name:n,icon:"star",color:PAL[db.cats.length%PAL.length],unit:q,fee:0,notes:[]};db.cats.push(c);cat=c.id;save()}}
+  ed.lines.push({id:uid(),cat,name:n,qty:q,fee:0});$("#tcn").value="";if($("#tcq"))$("#tcq").value="";toast(n+" ditambahkan");if(cat)tpick();else rer();break}
  case"lrm":ed.lines.splice(+d.i,1);rer();break;
  case"savepk":{const n=await ask("Beri nama paket ini.",{title:"Simpan sebagai paket",ok:"Simpan",input:ed.evName?"Paket "+ed.evName:"Paket baru"});if(n){const p={id:uid(),name:n,fee:+ed.deal||0,lines:ed.lines.map(l=>({cat:l.cat,name:l.name,qty:l.qty}))};db.packages.push(p);ed.pkgId=p.id;save();rer();toast("Paket disimpan")}break}
  case"ntadd":ed.notes.push("");$("#nts").innerHTML=notesHtml();[...document.querySelectorAll("#nts textarea")].pop()?.focus();break;
@@ -1442,7 +1456,7 @@ function nCard(){if(KD)return"";const on=nOn(),den=NOK()&&Notification.permissio
  return`<div class="fc"><h2>Notifikasi agenda</h2><p class="hint">${on?"Aktif. Tiap hari saat Einmorf dibuka kamu dapat ringkasan agenda hari ini (acara, jatuh tempo, agenda pribadi), plus pengingat 15 menit sebelum acara berjam.":den?"Izin notifikasi diblokir. Buka pengaturan situs / aplikasi untuk mengizinkan.":"Tampilkan ringkasan agenda hari ini dan pengingat 15 menit sebelum acara di HP-mu."}</p><div class="flx" style="flex-wrap:wrap;margin-top:10px">${on?`<button class="btn sm pr" data-act="ntest">Kirim ringkasan sekarang</button><button class="btn sm" data-act="noff">Matikan</button>`:`<button class="btn sm pr" data-act="non">Aktifkan notifikasi</button>`}</div></div>`}
 
 /* ================= Pembaruan otomatis ================= */
-const APPV="1.1.3";let upReady=false;
+const APPV="1.1.4";let upReady=false;
 function upReload(){uiSave();try{if(conn.mode==="gdrive"){gCache();if(gPend)gFlush()}else if(pend)wr()}catch(e){}setTimeout(()=>location.reload(),400)}
 function upToast(){if($("#upt"))return;const d=document.createElement("div");d.id="upt";d.innerHTML=`<span>Versi baru Einmorf siap.</span><button class="btn sm pr" data-act="upnow">Muat sekarang</button>`;document.body.appendChild(d)}
 async function upCheck(manual){try{const r=await navigator.serviceWorker.getRegistration();if(r){await r.update();if(manual)setTimeout(()=>{if(!upReady)say("Einmorf sudah versi terbaru ("+APPV+").","Pembaruan")},2500)}}catch(e){if(manual)say("Tidak bisa cek pembaruan. Periksa internet.","Pembaruan")}}
